@@ -23,6 +23,8 @@ app.use('/media', express.static(uploadDir));
 // Routes (basic stubs)
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));
+app.use('/api/media', require('./routes/media'));
+app.use('/api/settings', require('./routes/settings'));
 
 // Health
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
