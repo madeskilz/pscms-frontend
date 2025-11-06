@@ -2,7 +2,7 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
-const knexConfig = require('../../knexfile');
+const knexConfig = require('../knexfile');
 const knex = require('knex')(knexConfig[process.env.NODE_ENV || 'development']);
 const { Model } = require('objection');
 const fs = require('fs');

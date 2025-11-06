@@ -11,6 +11,10 @@ module.exports = {
     pool: {
       afterCreate: (conn, cb) => conn.run('PRAGMA foreign_keys = ON', cb)
     }
+    ,
+    seeds: {
+      directory: path.resolve(__dirname, 'src/seeds')
+    }
   },
   production: {
     client: 'sqlite3',
@@ -18,5 +22,9 @@ module.exports = {
       filename: process.env.DATABASE_FILE || path.resolve(__dirname, '../data/cms.sqlite')
     },
     useNullAsDefault: true
+    ,
+    seeds: {
+      directory: path.resolve(__dirname, 'src/seeds')
+    }
   }
 };
