@@ -8,12 +8,11 @@ import Card from '@mui/material/Card'
 import CardContent from '@mui/material/CardContent'
 import Typography from '@mui/material/Typography'
 import Box from '@mui/material/Box'
-import AppBar from '@mui/material/AppBar'
-import Toolbar from '@mui/material/Toolbar'
 import CardActionArea from '@mui/material/CardActionArea'
 import ArticleIcon from '@mui/icons-material/Article'
 import ImageIcon from '@mui/icons-material/Image'
 import SettingsIcon from '@mui/icons-material/Settings'
+import AdminLayout from '../../components/AdminLayout'
 
 export default function Admin() {
   const [user, setUser] = useState(null)
@@ -41,19 +40,11 @@ export default function Admin() {
   ]
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: 'background.default' }}>
-      <AppBar position="static" elevation={2}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
-            CMS Admin
-          </Typography>
-          <Typography variant="body2" color="inherit">
-            Welcome, {user?.display_name || user?.email}
-          </Typography>
-        </Toolbar>
-      </AppBar>
-      
-      <Container maxWidth="lg" sx={{ py: 6 }}>
+    <AdminLayout
+      title="CMS Admin"
+      rightContent={<Typography variant="body2" color="inherit">Welcome, {user?.display_name || user?.email}</Typography>}
+    >
+      <Container maxWidth="lg" sx={{ py: 2 }}>
         <Grid container spacing={4}>
           {menuItems.map((item) => (
             <Grid item xs={12} sm={6} md={4} key={item.href}>
@@ -78,6 +69,6 @@ export default function Admin() {
           ))}
         </Grid>
       </Container>
-    </Box>
+    </AdminLayout>
   )
 }

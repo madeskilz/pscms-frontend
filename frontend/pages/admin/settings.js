@@ -3,6 +3,20 @@ import { useRouter } from 'next/router'
 import { updateSetting } from '../../lib/api'
 import { themes } from '../../lib/themes'
 import { useTheme } from '../../lib/ThemeContext'
+import NextLink from 'next/link'
+import Container from '@mui/material/Container'
+import Grid from '@mui/material/Grid'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import CardActionArea from '@mui/material/CardActionArea'
+import Typography from '@mui/material/Typography'
+import Box from '@mui/material/Box'
+import Button from '@mui/material/Button'
+import Alert from '@mui/material/Alert'
+import Chip from '@mui/material/Chip'
+import CheckCircleIcon from '@mui/icons-material/CheckCircle'
+import PaletteIcon from '@mui/icons-material/Palette'
+import AdminLayout from '../../components/AdminLayout'
 
 export default function AdminSettings() {
   const [accessToken, setAccessToken] = useState(null)
@@ -35,67 +49,111 @@ export default function AdminSettings() {
     }
   }
 
-  if (!accessToken) return <div className="min-h-screen p-6">Loading...</div>
+  if (!accessToken) return <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Typography>Loading...</Typography></Box>
 
   return (
-    <div className="min-h-screen p-6 bg-gray-50">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Site Settings</h1>
-        
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <h2 className="text-xl font-semibold mb-4">Theme Selection</h2>
-          <p className="text-gray-600 mb-6">Choose a theme for your school website</p>
-          
-          {message && (
-            <div className="mb-6 p-4 bg-green-50 text-green-700 rounded-lg">
-              {message}
-            </div>
-          )}
+    <AdminLayout title="Site Settings" backHref="/admin">
+      <Container maxWidth="lg" sx={{ py: 0 }}>
+        <Card elevation={3} sx={{ mb: 4 }}>
+          <CardContent>
+            <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <PaletteIcon color="primary" />
+              Theme Selection
+            </Typography>
+            <Typography variant="body2" color="text.secondary" paragraph>
+              Choose a theme for your school website
+            </Typography>
+            
+            {message && (
+              <Alert severity={message.includes('success') ? 'success' : 'error'} sx={{ mb: 3 }}>
+                {message}
+              </Alert>
+            )}
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {Object.entries(themes).map(([id, theme]) => (
-              <div
-                key={id}
-                className={`border-2 rounded-lg p-6 cursor-pointer transition-all ${
-                  currentThemeId === id
-                    ? 'border-blue-500 bg-blue-50'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-                onClick={() => !saving && handleThemeChange(id)}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-bold">{theme.name}</h3>
-                  {currentThemeId === id && (
-                    <svg className="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  )}
-                </div>
-                <p className="text-sm text-gray-600 mb-4">{theme.description}</p>
-                <div className="flex gap-2">
-                  <div
-                    className="w-8 h-8 rounded-full border-2 border-white shadow"
-                    style={{ backgroundColor: theme.colors.primary }}
-                  ></div>
-                  <div
-                    className="w-8 h-8 rounded-full border-2 border-white shadow"
-                    style={{ backgroundColor: theme.colors.secondary }}
-                  ></div>
-                  <div
-                    className="w-8 h-8 rounded-full border-2 border-white shadow"
-                    style={{ backgroundColor: theme.colors.accent }}
-                  ></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+            <Grid container spacing={3}>
+              {Object.entries(themes).map(([id, theme]) => (
+                <Grid item xs={12} sm={6} md={4} key={id}>
+                  <Card 
+                    elevation={currentThemeId === id ? 8 : 2}
+                    sx={{ 
+                      border: 2, 
+                      borderColor: currentThemeId === id ? 'primary.main' : 'grey.200',
+                      position: 'relative'
+                    }}
+                  >
+                    <CardActionArea onClick={() => !saving && handleThemeChange(id)}>
+                      <CardContent>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', mb: 2 }}>
+                          <Typography variant="h6" component="h3" fontWeight={700}>
+                            {theme.name}
+                          </Typography>
+                          {currentThemeId === id && (
+                            <CheckCircleIcon color="primary" />
+                          )}
+                        </Box>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                          {theme.description}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              bgcolor: theme.colors.primary,
+                              border: '2px solid white',
+                              boxShadow: 1
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              bgcolor: theme.colors.secondary,
+                              border: '2px solid white',
+                              boxShadow: 1
+                            }}
+                          />
+                          <Box
+                            sx={{
+                              width: 32,
+                              height: 32,
+                              borderRadius: '50%',
+                              bgcolor: theme.colors.accent,
+                              border: '2px solid white',
+                              boxShadow: 1
+                            }}
+                          />
+                        </Box>
+                        {currentThemeId === id && (
+                          <Chip 
+                            label="Active" 
+                            color="primary" 
+                            size="small" 
+                            sx={{ mt: 2 }}
+                          />
+                        )}
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold mb-4">Other Settings</h2>
-          <p className="text-gray-600">Additional settings coming soon...</p>
-        </div>
-      </div>
-    </div>
+        <Card elevation={3}>
+          <CardContent>
+            <Typography variant="h5" gutterBottom>
+              Other Settings
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Additional settings coming soon...
+            </Typography>
+          </CardContent>
+        </Card>
+      </Container>
+    </AdminLayout>
   )
 }

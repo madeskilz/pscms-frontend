@@ -1,7 +1,22 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import Link from 'next/link'
+import NextLink from 'next/link'
 import { getPosts, deletePost } from '../../lib/api'
+import AdminLayout from '../../../components/AdminLayout'
+import Box from '@mui/material/Box'
+import Typography from '@mui/material/Typography'
+import Button from '@mui/material/Button'
+import Grid from '@mui/material/Grid'
+import Card from '@mui/material/Card'
+import CardContent from '@mui/material/CardContent'
+import Chip from '@mui/material/Chip'
+import Stack from '@mui/material/Stack'
+import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
+import AddIcon from '@mui/icons-material/Add'
+import EditIcon from '@mui/icons-material/Edit'
+import DeleteIcon from '@mui/icons-material/Delete'
+import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
 export default function AdminPosts() {
   const [accessToken, setAccessToken] = useState(null)
@@ -40,90 +55,64 @@ export default function AdminPosts() {
     }
   }
 
-  if (loading) return <div className="min-h-screen p-6">Loading...</div>
+  if (loading) return <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</Box>
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <div className="bg-white shadow">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex justify-between items-center">
-            <Link href="/admin" className="text-blue-600 hover:underline flex items-center gap-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Back to Dashboard
-            </Link>
-          </div>
-        </div>
-      </div>
-      
-      <div className="container mx-auto px-6 py-8">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">Posts</h1>
-          <Link
-            href="/admin/posts/new"
-            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all shadow-lg font-semibold flex items-center gap-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            New Post
-          </Link>
-        </div>
-        {posts.length === 0 && (
-          <div className="bg-white rounded-lg shadow p-12 text-center">
-            <svg className="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-            <p className="text-gray-600 text-lg">No posts yet. Create your first post!</p>
-          </div>
-        )}
-        <div className="space-y-4">
-          {posts.map((post) => (
-            <div key={post.id} className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow border-l-4 border-blue-500">
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <h2 className="text-xl font-bold text-gray-800 mb-2">{post.title || '(Untitled)'}</h2>
-                  <div className="flex gap-4 text-sm text-gray-600">
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                      </svg>
-                      {post.status}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                      </svg>
-                      {post.slug}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      {new Date(post.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Link
-                    href={`/admin/posts/${post.id}`}
-                    className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors font-medium"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(post.id)}
-                    className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors font-medium"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
+    <AdminLayout title="Posts" backHref="/admin">
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h4" fontWeight={700}>Posts</Typography>
+        <Button
+          component={NextLink}
+          href="/admin/posts/new"
+          variant="contained"
+          startIcon={<AddIcon />}
+        >
+          New Post
+        </Button>
+      </Box>
+
+      {posts.length === 0 && (
+        <Card elevation={2}>
+          <CardContent>
+            <Typography variant="body1" color="text.secondary">
+              No posts yet. Create your first post!
+            </Typography>
+          </CardContent>
+        </Card>
+      )}
+
+      <Grid container spacing={3} sx={{ mt: 0 }}>
+        {posts.map((post) => (
+          <Grid item xs={12} key={post.id}>
+            <Card elevation={3}>
+              <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="h6" fontWeight={700} noWrap gutterBottom>
+                    {post.title || '(Untitled)'}
+                  </Typography>
+                  <Stack direction="row" spacing={2} sx={{ color: 'text.secondary' }}>
+                    <Chip size="small" label={post.status} color={post.status === 'published' ? 'success' : 'default'} />
+                    <Typography variant="caption" title={post.slug} noWrap>{post.slug}</Typography>
+                    <Typography variant="caption">{new Date(post.created_at).toLocaleDateString()}</Typography>
+                  </Stack>
+                </Box>
+                <Stack direction="row" spacing={1}>
+                  <Tooltip title="Edit">
+                    <IconButton component={NextLink} href={`/admin/posts/${post.id}`} color="primary">
+                      <EditIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete">
+                    <IconButton color="error" onClick={() => handleDelete(post.id)}>
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </AdminLayout>
   )
 }
