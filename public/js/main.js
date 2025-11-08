@@ -32,7 +32,7 @@
 
     console.log('[APP] Application ready');
     
-    // Show helpful tip if database was just created
+    // Show helpful notification if database was just created
     const isNewDatabase = !localStorage.getItem('cms_database_initialized');
     if (isNewDatabase) {
       localStorage.setItem('cms_database_initialized', 'true');
@@ -46,6 +46,9 @@
       console.log('');
       console.log('The app will then load from file instead of localStorage');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      
+      // Show visual notification
+      showDatabaseSetupNotification();
     }
   } catch (error) {
     console.error('[APP] Failed to start:', error);
@@ -58,3 +61,35 @@
     `;
   }
 })();
+
+/**
+ * Show notification about database file setup
+ */
+function showDatabaseSetupNotification() {
+  const notification = document.createElement('div');
+  notification.className = 'db-notification';
+  notification.innerHTML = `
+    <button class="close-btn" onclick="this.parentElement.remove()">×</button>
+    <h4>📥 Database File Downloaded</h4>
+    <p><strong>cms.db</strong> has been saved to your Downloads folder.</p>
+    <p>To enable auto-loading:</p>
+    <ol>
+      <li>Move <code>cms.db</code> to <code>/build/data/</code></li>
+      <li>Refresh this page</li>
+    </ol>
+    <p style="font-size:0.85rem;margin-top:10px;opacity:0.9;">
+      💡 The app will then load from the file instead of browser storage.
+    </p>
+    <button onclick="this.parentElement.remove()">Got it!</button>
+  `;
+  
+  document.body.appendChild(notification);
+  
+  // Auto-dismiss after 30 seconds
+  setTimeout(() => {
+    if (notification.parentElement) {
+      notification.style.animation = 'slideOut 0.3s ease-in';
+      setTimeout(() => notification.remove(), 300);
+    }
+  }, 30000);
+}
