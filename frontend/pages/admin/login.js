@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import NextLink from 'next/link'
 import { login } from '../../lib/api'
 import Box from '@mui/material/Box'
 import Card from '@mui/material/Card'
@@ -16,6 +17,14 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const router = useRouter()
+
+  // If already authenticated, skip login
+  useEffect(() => {
+    try {
+      const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null
+      if (token) router.replace('/admin')
+    } catch {}
+  }, [router])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -89,9 +98,12 @@ export default function AdminLogin() {
               type="submit"
               fullWidth
               variant="contained"
-              sx={{ mt: 3, mb: 2, py: 1.5, fontSize: '1rem', fontWeight: 600 }}
+              sx={{ mt: 3, mb: 1, py: 1.5, fontSize: '1rem', fontWeight: 600 }}
             >
               Sign In
+            </Button>
+            <Button component={NextLink} href="/" fullWidth variant="text" sx={{ mt: 0.5 }}>
+              ← Back to Home
             </Button>
           </Box>
         </CardContent>

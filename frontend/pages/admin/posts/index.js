@@ -74,14 +74,23 @@ export default function AdminPosts() {
           <AdminLayout title="Posts" backHref="/admin">
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                   <Typography variant="h4" fontWeight={700}>Posts</Typography>
-                  <Button
-                      component={NextLink}
-                      href="/admin/posts/new"
-                      variant="contained"
-                      startIcon={<AddIcon />}
-                  >
-                      New Post
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                        component={NextLink}
+                        href="/admin/posts-summary"
+                        variant="outlined"
+                    >
+                        Summary
+                    </Button>
+                    <Button
+                        component={NextLink}
+                        href="/admin/posts/new"
+                        variant="contained"
+                        startIcon={<AddIcon />}
+                    >
+                        New Post
+                    </Button>
+                  </Box>
               </Box>
 
               {postsLoading ? (
