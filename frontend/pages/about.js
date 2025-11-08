@@ -20,25 +20,30 @@ export default function AboutPage() {
               keywords={['about', 'school', 'mission', 'values', 'facilities']}
           />
     <PublicLayout>
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Typography variant="h2" fontWeight={800} color="primary" sx={{ fontFamily: theme.fonts.heading, mb: 3 }}>
-          About Our School
-        </Typography>
+      <Container maxWidth="md" sx={{ py: 8 }}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography variant="h2" fontWeight={800} color="primary" sx={{ fontFamily: theme.fonts.heading, mb: 2 }}>
+            About Our School
+          </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '700px', mx: 'auto' }}>
+            Dedicated to excellence in education and nurturing the next generation of leaders.
+          </Typography>
+        </Box>
 
-        <Card elevation={3} sx={{ mb: 4, bgcolor: theme.colors.surface }}>
-          <CardContent>
-            <Typography variant="h4" fontWeight={700} color="primary" gutterBottom>
+        <Card elevation={3} sx={{ mb: 5, bgcolor: theme.colors.surface, borderRadius: 3 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant="h4" fontWeight={700} color="primary" gutterBottom sx={{ mb: 3 }}>
               Our Mission
             </Typography>
-            <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.8 }}>
+            <Typography variant="body1" color="text.primary" sx={{ lineHeight: 1.8, fontSize: '1.1rem' }}>
               We are committed to providing quality education that empowers Nigerian K12 students to reach their full potential. Our goal is to create a nurturing environment where every student can thrive academically, socially, and personally.
             </Typography>
           </CardContent>
         </Card>
 
-        <Card elevation={3} sx={{ mb: 4, bgcolor: theme.colors.surface }}>
-          <CardContent>
-            <Typography variant="h4" fontWeight={700} color="primary" gutterBottom>
+        <Card elevation={3} sx={{ mb: 5, bgcolor: theme.colors.surface, borderRadius: 3 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant="h4" fontWeight={700} color="primary" gutterBottom sx={{ mb: 3 }}>
               Our Values
             </Typography>
             <Box component="ul" sx={{ listStyle: 'none', pl: 0, m: 0 }}>
@@ -48,11 +53,11 @@ export default function AboutPage() {
                 { title: 'Innovation', description: 'We embrace modern teaching methods and technology to enhance learning.' },
                 { title: 'Community', description: 'We foster a strong sense of belonging and collaboration among students, staff, and parents.' }
               ].map((value, index) => (
-                <Box component="li" key={index} sx={{ display: 'flex', gap: 2, mb: 2, alignItems: 'flex-start' }}>
-                  <Box sx={{ width: 32, height: 32, borderRadius: '50%', bgcolor: theme.colors.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>{index + 1}</Box>
-                  <Box>
-                    <Typography variant="h6" fontWeight={700} color="primary">{value.title}</Typography>
-                    <Typography variant="body2" color="text.secondary">{value.description}</Typography>
+                <Box component="li" key={index} sx={{ display: 'flex', gap: 2.5, mb: 3, alignItems: 'flex-start' }}>
+                  <Box sx={{ width: 40, height: 40, borderRadius: '50%', bgcolor: theme.colors.primary, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1.1rem', flexShrink: 0 }}>{index + 1}</Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="h6" fontWeight={700} color="primary" gutterBottom>{value.title}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7 }}>{value.description}</Typography>
                   </Box>
                 </Box>
               ))}
@@ -60,24 +65,24 @@ export default function AboutPage() {
           </CardContent>
         </Card>
 
-        <Card elevation={3} sx={{ mb: 4, bgcolor: theme.colors.surface }}>
-          <CardContent>
-            <Typography variant="h4" fontWeight={700} color="primary" gutterBottom>
+        <Card elevation={3} sx={{ mb: 5, bgcolor: theme.colors.surface, borderRadius: 3 }}>
+          <CardContent sx={{ p: 4 }}>
+            <Typography variant="h4" fontWeight={700} color="primary" gutterBottom sx={{ mb: 3 }}>
               Our Facilities
             </Typography>
-            <Grid container spacing={2}>
+            <Grid container spacing={3}>
               {[
                 { icon: '📚', title: 'Modern Library', description: 'Well-stocked with books and digital resources' },
                 { icon: '🔬', title: 'Science Labs', description: 'Equipped for hands-on experiments and research' },
                 { icon: '💻', title: 'Computer Center', description: 'Latest technology for digital literacy' },
                 { icon: '⚽', title: 'Sports Complex', description: 'Facilities for athletics and team sports' }
               ].map((facility, index) => (
-                <Grid item xs={12} md={6} key={index}>
-                  <Box sx={{ display: 'flex', gap: 2, p: 2, borderRadius: 2, border: `2px solid ${theme.colors.accent}` }}>
-                    <Box sx={{ fontSize: 32 }}>{facility.icon}</Box>
+                <Grid item xs={12} sm={6} key={index}>
+                  <Box sx={{ display: 'flex', gap: 2, p: 3, borderRadius: 2, border: `2px solid ${theme.colors.accent}`, height: '100%', transition: 'all 0.3s ease', '&:hover': { borderColor: theme.colors.primary, boxShadow: 2, transform: 'translateY(-2px)' } }}>
+                    <Box sx={{ fontSize: 36, flexShrink: 0 }}>{facility.icon}</Box>
                     <Box>
-                      <Typography variant="subtitle1" fontWeight={700} color="primary">{facility.title}</Typography>
-                      <Typography variant="body2" color="text.secondary">{facility.description}</Typography>
+                      <Typography variant="subtitle1" fontWeight={700} color="primary" gutterBottom>{facility.title}</Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.6 }}>{facility.description}</Typography>
                     </Box>
                   </Box>
                 </Grid>
@@ -87,15 +92,15 @@ export default function AboutPage() {
         </Card>
 
         <Box sx={{
-          p: 5,
+          p: 6,
           textAlign: 'center',
-          borderRadius: 2,
-          boxShadow: 3,
-          backgroundImage: `linear-gradient(to bottom right, ${theme.colors.primary}, ${theme.colors.secondary})`
+          borderRadius: 3,
+          boxShadow: 6,
+          backgroundImage: `linear-gradient(135deg, ${theme.colors.primary}, ${theme.colors.secondary})`
         }}>
-          <Typography variant="h4" fontWeight={800} sx={{ color: '#fff', mb: 2 }}>Join Our Community</Typography>
-          <Typography variant="body1" sx={{ color: '#fff', mb: 3 }}>Interested in learning more about our school? Contact us today!</Typography>
-          <Button href="mailto:info@school.test" variant="contained" sx={{ bgcolor: '#fff', color: theme.colors.primary, fontWeight: 700, '&:hover': { bgcolor: '#f5f5f5' } }}>
+          <Typography variant="h3" fontWeight={800} sx={{ color: '#fff', mb: 2 }}>Join Our Community</Typography>
+          <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.95)', mb: 3, fontSize: '1.1rem', maxWidth: '600px', mx: 'auto' }}>Interested in learning more about our school? We'd love to hear from you!</Typography>
+          <Button href="mailto:info@school.test" variant="contained" size="large" sx={{ bgcolor: '#fff', color: theme.colors.primary, fontWeight: 700, px: 4, py: 1.5, '&:hover': { bgcolor: '#f5f5f5', transform: 'translateY(-2px)' }, transition: 'all 0.2s ease' }}>
             Get in Touch
           </Button>
         </Box>

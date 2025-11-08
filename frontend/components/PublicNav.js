@@ -75,17 +75,17 @@ export default function PublicNav() {
 
   return (
     <>
-      <AppBar position="static" elevation={3} sx={{ bgcolor: theme.colors.surface, color: theme.colors.text }}>
-        <Toolbar sx={{ maxWidth: 'lg', mx: 'auto', width: '100%' }}>
-          <Box component={NextLink} href="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', mr: 2 }}>
-            <Box sx={{ width: 40, height: 40, bgcolor: theme.colors.primary, color: '#fff', fontWeight: 700, fontSize: 22, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 1 }}>
+      <AppBar position="static" elevation={0} sx={{ bgcolor: theme.colors.surface, color: theme.colors.text, borderBottom: `2px solid ${theme.colors.primary}20` }}>
+        <Toolbar sx={{ maxWidth: 'lg', mx: 'auto', width: '100%', py: 1 }}>
+          <Box component={NextLink} href="/" sx={{ display: 'flex', alignItems: 'center', textDecoration: 'none', mr: 4 }}>
+            <Box sx={{ width: 44, height: 44, bgcolor: theme.colors.primary, color: '#fff', fontWeight: 700, fontSize: 24, borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', mr: 1.5, boxShadow: 2 }}>
               S
             </Box>
-            <Typography variant="h6" fontWeight={700} color="primary" sx={{ fontFamily: theme.fonts.heading }}>
+            <Typography variant="h6" fontWeight={700} color="primary" sx={{ fontFamily: theme.fonts.heading, letterSpacing: -0.5 }}>
               School CMS
             </Typography>
           </Box>
-          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 3 }}>
+          <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 1 }}>
             {links.map(l => (
                 <NavLink key={l.href} link={l} theme={theme} />
             ))}
@@ -95,12 +95,21 @@ export default function PublicNav() {
               component={NextLink}
               href="/admin"
               variant="contained"
+              size="small"
               sx={{
                 background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-                fontWeight: 600
+                fontWeight: 600,
+                px: 3,
+                borderRadius: 2,
+                boxShadow: 2,
+                '&:hover': {
+                  boxShadow: 4,
+                  transform: 'translateY(-1px)'
+                },
+                transition: 'all 0.2s ease'
               }}
             >
-              Admin
+              Admin Login
             </Button>
           </Box>
           <IconButton
@@ -114,23 +123,22 @@ export default function PublicNav() {
         </Toolbar>
       </AppBar>
           <Drawer anchor="right" open={open} onClose={handleDrawerClose}>
-              <Box sx={{ width: 260 }} role="presentation" onClick={handleDrawerClose}>
-          <Box sx={{ p: 2 }}>
-            <Typography variant="h6" fontWeight={700} color="primary">Menu</Typography>
+              <Box sx={{ width: 280 }} role="presentation" onClick={handleDrawerClose}>
+          <Box sx={{ p: 3, bgcolor: 'primary.main', color: '#fff' }}>
+            <Typography variant="h5" fontWeight={700}>Menu</Typography>
           </Box>
-          <Divider />
-          <List>
+          <List sx={{ pt: 2 }}>
             {links.map(l => (
               <ListItem key={l.href} disablePadding>
-                <ListItemButton component={NextLink} href={l.href}>
-                  <ListItemText primary={l.label} />
+                <ListItemButton component={NextLink} href={l.href} sx={{ py: 1.5, px: 3 }}>
+                  <ListItemText primary={l.label} primaryTypographyProps={{ fontWeight: 500 }} />
                 </ListItemButton>
               </ListItem>
             ))}
-            <Divider sx={{ my: 1 }} />
+            <Divider sx={{ my: 2 }} />
             <ListItem disablePadding>
-              <ListItemButton component={NextLink} href="/admin">
-                <ListItemText primary="Admin" />
+              <ListItemButton component={NextLink} href="/admin" sx={{ py: 1.5, px: 3, bgcolor: 'primary.light', '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}>
+                <ListItemText primary="Admin Login" primaryTypographyProps={{ fontWeight: 600 }} />
               </ListItemButton>
             </ListItem>
           </List>

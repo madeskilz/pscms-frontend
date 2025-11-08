@@ -23,29 +23,39 @@ export default function PostsPage({ posts }) {
           />
     <Box sx={{ backgroundColor: theme.colors.background, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <PublicNav />
-      <Container maxWidth="lg" sx={{ py: 6, flex: 1 }}>
-        <Typography variant="h3" component="h1" gutterBottom fontWeight={700} color="primary">
-          News & Posts
-        </Typography>
-        {posts.length === 0 && (
-          <Typography variant="h6" color="text.secondary" align="center" sx={{ mt: 4 }}>
-            No posts yet.
+      <Container maxWidth="lg" sx={{ py: 8, flex: 1 }}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography variant="h2" component="h1" gutterBottom fontWeight={800} color="primary">
+            News & Updates
           </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '700px', mx: 'auto' }}>
+            Stay informed with the latest announcements, events, and stories from our school community
+          </Typography>
+        </Box>
+        {posts.length === 0 && (
+          <Box sx={{ textAlign: 'center', py: 10 }}>
+            <Typography variant="h5" color="text.secondary" gutterBottom>
+              No posts available yet
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Check back soon for updates!
+            </Typography>
+          </Box>
         )}
-        <Grid container spacing={4} sx={{ mt: 2 }}>
+        <Grid container spacing={4} sx={{ mt: 0 }}>
           {posts.map(post => (
             <Grid item xs={12} sm={6} md={4} key={post.id}>
-              <Card elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                <CardActionArea component={NextLink} href={`/posts/${post.slug}`} sx={{ flexGrow: 1 }}>
-                  <CardContent>
-                    <Typography variant="h5" component="h2" gutterBottom fontWeight={700} color="primary">
+              <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2, transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 } }}>
+                <CardActionArea component={NextLink} href={`/posts/${post.slug}`} sx={{ flexGrow: 1, p: 0 }}>
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h5" component="h2" gutterBottom fontWeight={700} color="primary" sx={{ lineHeight: 1.3, mb: 1.5 }}>
                       {post.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" paragraph>
-                      {post.excerpt || post.content.replace(/<[^>]*>/g, '').slice(0, 120) + '...'}
+                    <Typography variant="body2" color="text.secondary" paragraph sx={{ lineHeight: 1.7 }}>
+                      {post.excerpt || post.content.replace(/<[^>]*>/g, '').slice(0, 140) + '...'}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {new Date(post.created_at).toLocaleDateString()}
+                    <Typography variant="caption" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
+                      {new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </Typography>
                   </CardContent>
                 </CardActionArea>

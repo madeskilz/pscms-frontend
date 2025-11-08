@@ -18,17 +18,17 @@ import CardActionArea from '@mui/material/CardActionArea'
 // Memoized PostCard component
 const PostCard = memo(function PostCard({ post }) {
     return (
-        <Card elevation={3} sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <CardActionArea component={NextLink} href={`/posts/${post.slug}`} sx={{ flexGrow: 1 }}>
-                <CardContent>
-                    <Typography variant="h5" component="h3" gutterBottom fontWeight={700} color="primary">
+        <Card elevation={2} sx={{ height: '100%', display: 'flex', flexDirection: 'column', borderRadius: 2, transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 } }}>
+            <CardActionArea component={NextLink} href={`/posts/${post.slug}`} sx={{ flexGrow: 1, p: 0 }}>
+                <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h5" component="h3" gutterBottom fontWeight={700} color="primary" sx={{ lineHeight: 1.3, mb: 1.5 }}>
                         {post.title}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
-                        {new Date(post.created_at).toLocaleDateString()}
+                    <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2, textTransform: 'uppercase', letterSpacing: 0.5, fontWeight: 600 }}>
+                        {new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
                     </Typography>
                     {post.content && (
-                        <Typography variant="body2" color="text.secondary" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+                        <Typography variant="body2" color="text.secondary" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', lineHeight: 1.6 }}>
                             {post.content.replace(/<[^>]*>/g, '').slice(0, 150) + '...'}
                         </Typography>
                     )}
@@ -89,8 +89,8 @@ export default function Home({ posts, initialTheme, homepage }) {
                       <HeroSkeleton />
                   ) : HeroComponent ? (
                           <HeroComponent
-                              title={homepage?.heroTitle || 'Welcome to School CMS'}
-                              subtitle={homepage?.heroSubtitle || 'Empowering education through technology'}
+                              title={homepage?.heroTitle || 'Welcome to Our School'}
+                              subtitle={homepage?.heroSubtitle || 'Empowering the next generation through quality education and innovation'}
                               ctaText={homepage?.ctaText}
                               ctaHref={homepage?.ctaHref}
                           />
@@ -99,40 +99,46 @@ export default function Home({ posts, initialTheme, homepage }) {
                   {/* Theme Features Section */}
                   {hasFeatures && FeaturesComponent && <FeaturesComponent />}
 
-                  <Container maxWidth="lg" sx={{ py: 6 }}>
+                  <Container maxWidth="lg" sx={{ py: 8 }}>
                                             {/* Parent Quick Links Section */}
-                                            <Box sx={{ mb: 8 }}>
-                                                <Typography variant="h4" component="h2" gutterBottom fontWeight={700} color="text.primary">
+                                            <Box sx={{ mb: 10 }}>
+                                                <Typography variant="h3" component="h2" gutterBottom fontWeight={700} color="text.primary" sx={{ mb: 1 }}>
                                                     For Parents
                                                 </Typography>
+                                                <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: '800px' }}>
+                                                    Quick access to essential resources and information for parents and guardians.
+                                                </Typography>
                                                 <Grid container spacing={3}>
-                                                    <Grid item xs={12} md={4}>
-                                                        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-                                                            <CardActionArea component={NextLink} href="/posts/welcome-back">
-                                                                <CardContent>
-                                                                    <Typography variant="h6" fontWeight={700} color="primary">Admissions</Typography>
-                                                                    <Typography variant="body2" color="text.secondary">Enrollment steps and requirements.</Typography>
-                                                                </CardContent>
+                                                    <Grid item xs={12} sm={6} md={4}>
+                                                        <Card elevation={2} sx={{ height: '100%', borderRadius: 2, transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 } }}>
+                                                            <CardActionArea component={NextLink} href="/posts/welcome-back" sx={{ height: '100%', p: 3 }}>
+                                                                <Box sx={{ textAlign: 'center' }}>
+                                                                    <Box sx={{ width: 56, height: 56, borderRadius: '50%', bgcolor: 'primary.light', color: 'primary.main', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, fontSize: 28 }}>📚</Box>
+                                                                    <Typography variant="h6" fontWeight={700} color="primary" gutterBottom>Admissions</Typography>
+                                                                    <Typography variant="body2" color="text.secondary">Enrollment steps and requirements for new students.</Typography>
+                                                                </Box>
                                                             </CardActionArea>
                                                         </Card>
                                                     </Grid>
-                                                    <Grid item xs={12} md={4}>
-                                                        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-                                                            <CardActionArea component={NextLink} href="/posts/sports-day-highlights">
-                                                                <CardContent>
-                                                                    <Typography variant="h6" fontWeight={700} color="primary">Calendar</Typography>
-                                                                    <Typography variant="body2" color="text.secondary">Key dates & upcoming events.</Typography>
-                                                                </CardContent>
+                                                    <Grid item xs={12} sm={6} md={4}>
+                                                        <Card elevation={2} sx={{ height: '100%', borderRadius: 2, transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 } }}>
+                                                            <CardActionArea component={NextLink} href="/posts/sports-day-highlights" sx={{ height: '100%', p: 3 }}>
+                                                                <Box sx={{ textAlign: 'center' }}>
+                                                                    <Box sx={{ width: 56, height: 56, borderRadius: '50%', bgcolor: 'secondary.light', color: 'secondary.main', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, fontSize: 28 }}>📅</Box>
+                                                                    <Typography variant="h6" fontWeight={700} color="primary" gutterBottom>Calendar</Typography>
+                                                                    <Typography variant="body2" color="text.secondary">Key dates, events, and academic schedules.</Typography>
+                                                                </Box>
                                                             </CardActionArea>
                                                         </Card>
                                                     </Grid>
-                                                    <Grid item xs={12} md={4}>
-                                                        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
-                                                            <CardActionArea component={NextLink} href="/posts">
-                                                                <CardContent>
-                                                                    <Typography variant="h6" fontWeight={700} color="primary">PTA</Typography>
-                                                                    <Typography variant="body2" color="text.secondary">Parent-Teacher updates & news.</Typography>
-                                                                </CardContent>
+                                                    <Grid item xs={12} sm={6} md={4}>
+                                                        <Card elevation={2} sx={{ height: '100%', borderRadius: 2, transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 } }}>
+                                                            <CardActionArea component={NextLink} href="/posts" sx={{ height: '100%', p: 3 }}>
+                                                                <Box sx={{ textAlign: 'center' }}>
+                                                                    <Box sx={{ width: 56, height: 56, borderRadius: '50%', bgcolor: 'success.light', color: 'success.main', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2, fontSize: 28 }}>🤝</Box>
+                                                                    <Typography variant="h6" fontWeight={700} color="primary" gutterBottom>PTA</Typography>
+                                                                    <Typography variant="body2" color="text.secondary">Parent-Teacher Association news and updates.</Typography>
+                                                                </Box>
                                                             </CardActionArea>
                                                         </Card>
                                                     </Grid>
@@ -141,15 +147,18 @@ export default function Home({ posts, initialTheme, homepage }) {
                       {/* Featured Posts Section */}
                       {homepage?.featuredPostIds?.length > 0 && (
                           <Box sx={{
-                              mb: 8,
-                              p: 4,
+                              mb: 10,
+                              p: { xs: 3, md: 5 },
                               borderRadius: 3,
-                              background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 60%)`,
+                              background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 100%)`,
                               color: '#fff',
-                              boxShadow: 4
+                              boxShadow: '0 10px 40px rgba(0,0,0,0.15)'
                           }}>
-                              <Typography variant="h4" component="h2" gutterBottom fontWeight={700} sx={{ color: '#fff' }}>
+                              <Typography variant="h3" component="h2" gutterBottom fontWeight={700} sx={{ color: '#fff', mb: 1 }}>
                                   Featured Posts
+                              </Typography>
+                              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.95)', mb: 4, maxWidth: '800px' }}>
+                                  Highlighted content and important updates from our school community.
                               </Typography>
                               <Grid container spacing={3} sx={{ mt: 1 }}>
                                   {posts
@@ -179,15 +188,25 @@ export default function Home({ posts, initialTheme, homepage }) {
                           </Box>
                       )}
 
-                      <Typography variant="h3" component="h2" gutterBottom fontWeight={700} color="text.primary">
-                          {homepage?.postsSectionTitle || 'Latest Posts'}
-                      </Typography>
-                      {posts.length === 0 && (
-                          <Typography variant="h6" color="text.secondary" sx={{ mt: 4 }}>
-                              No published posts yet. Check back soon!
+                      <Box sx={{ mb: 5 }}>
+                          <Typography variant="h3" component="h2" gutterBottom fontWeight={700} color="text.primary" sx={{ mb: 1 }}>
+                              {homepage?.postsSectionTitle || 'Latest News & Updates'}
                           </Typography>
+                          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: '800px' }}>
+                              Stay informed with the latest announcements, events, and stories from our school.
+                          </Typography>
+                      </Box>
+                      {posts.length === 0 && (
+                          <Box sx={{ textAlign: 'center', py: 8 }}>
+                              <Typography variant="h5" color="text.secondary" gutterBottom>
+                                  No published posts yet
+                              </Typography>
+                              <Typography variant="body1" color="text.secondary">
+                                  Check back soon for updates and announcements!
+                              </Typography>
+                          </Box>
                       )}
-                      <Grid container spacing={4} sx={{ mt: 2 }}>
+                      <Grid container spacing={4} sx={{ mt: 0 }}>
                           {posts.map((post) => (
                               <Grid item xs={12} sm={6} md={4} key={post.id}>
                                   <PostCard post={post} />

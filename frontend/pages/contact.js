@@ -22,16 +22,18 @@ export default function ContactPage() {
           />
     <Box sx={{ backgroundColor: theme.colors.background, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <PublicNav />
-      <Container maxWidth="md" sx={{ py: 6, flex: 1 }}>
-        <Card elevation={4}>
-          <CardContent sx={{ p: 4 }}>
-            <Typography variant="h3" component="h1" gutterBottom fontWeight={700} color="primary">
-              Contact Us
-            </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              We'd love to hear from you! Reach out with any questions, feedback, or enrollment inquiries.
-            </Typography>
-            <Box component="form" noValidate sx={{ mt: 3 }}>
+      <Container maxWidth="md" sx={{ py: 8, flex: 1 }}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography variant="h2" component="h1" gutterBottom fontWeight={800} color="primary">
+            Contact Us
+          </Typography>
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto' }}>
+            We'd love to hear from you! Reach out with any questions, feedback, or enrollment inquiries.
+          </Typography>
+        </Box>
+        <Card elevation={6} sx={{ borderRadius: 3 }}>
+          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+            <Box component="form" noValidate sx={{ mt: 2 }}>
               <TextField
                 margin="normal"
                 required
@@ -65,14 +67,18 @@ export default function ContactPage() {
                 type="submit"
                 fullWidth
                 variant="contained"
-                sx={{ mt: 3, py: 1.5, fontSize: '1rem', fontWeight: 600 }}
+                size="large"
+                sx={{ mt: 4, py: 1.8, fontSize: '1.1rem', fontWeight: 700, borderRadius: 2 }}
               >
                 Send Message
               </Button>
             </Box>
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
-              Or email us directly: <Link href="mailto:info@school.test">info@school.test</Link>
-            </Typography>
+            <Box sx={{ mt: 4, p: 3, borderRadius: 2, bgcolor: 'grey.50', textAlign: 'center' }}>
+              <Typography variant="body1" color="text.secondary" gutterBottom>
+                Or email us directly at:
+              </Typography>
+              <Link href="mailto:info@school.test" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>info@school.test</Link>
+            </Box>
           </CardContent>
         </Card>
       </Container>

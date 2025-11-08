@@ -11,15 +11,16 @@ import { useTheme } from '../lib/ThemeContext'
 function QuickCard({ title, description, href }) {
   const { theme } = useTheme()
   return (
-    <Paper elevation={2} sx={{ p: 3, borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <Typography variant="h6" fontWeight={700} sx={{ color: theme.colors.primary }}>{title}</Typography>
-      <Typography variant="body2" sx={{ flex: 1 }}>{description}</Typography>
+    <Paper elevation={3} sx={{ p: 4, borderRadius: 3, height: '100%', display: 'flex', flexDirection: 'column', gap: 2, transition: 'all 0.3s ease', '&:hover': { transform: 'translateY(-4px)', boxShadow: 6 } }}>
+      <Typography variant="h5" fontWeight={700} sx={{ color: theme.colors.primary }}>{title}</Typography>
+      <Typography variant="body1" color="text.secondary" sx={{ flex: 1, lineHeight: 1.7 }}>{description}</Typography>
       <Box>
-        <Button component={Link} href={href} variant="contained" sx={{
+        <Button component={Link} href={href} variant="contained" size="large" fullWidth sx={{
           background: `linear-gradient(90deg, ${theme.colors.primary}, ${theme.colors.secondary})`,
-          fontWeight: 600
+          fontWeight: 700,
+          py: 1.5
         }}>
-          View
+          Learn More
         </Button>
       </Box>
     </Paper>
@@ -27,13 +28,16 @@ function QuickCard({ title, description, href }) {
 }
 
 export default function ParentsPage() {
+  const { theme } = useTheme()
   return (
     <PublicLayout>
-      <Box sx={{ textAlign: 'center', mb: 4 }}>
-        <Typography variant="h4" fontWeight={800}>Parents & Guardians</Typography>
-        <Typography variant="subtitle1">Quick access to essential information</Typography>
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Typography variant="h2" fontWeight={800} color="primary" gutterBottom>Parents & Guardians</Typography>
+        <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '700px', mx: 'auto' }}>
+          Quick access to essential information and resources for our parent community
+        </Typography>
       </Box>
-      <Grid container spacing={3}>
+      <Grid container spacing={4}>
         <Grid item xs={12} md={4}>
           <QuickCard title="Admissions" description="Enrollment steps, required documents, and contacts." href="/posts/welcome-back" />
         </Grid>
