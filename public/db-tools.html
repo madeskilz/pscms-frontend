@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Database Export Tool</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 { color: #2c3e50; }
+    .btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 10px 5px;
+    }
+    .btn:hover { background: #2980b9; }
+    .btn-danger { background: #e74c3c; }
+    .btn-danger:hover { background: #c0392b; }
+    .info {
+      background: #ecf0f1;
+      padding: 15px;
+      border-radius: 4px;
+      margin: 20px 0;
+    }
+    code {
+      background: #2c3e50;
+      color: #ecf0f1;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    .success { background: #d4edda; color: #155724; }
+    .error { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+  <h1>🗄️ Database Export/Import Tool</h1>
+  
+  <div class="info">
+    <h3>Current Database Status</h3>
+    <p id="dbStatus">Checking...</p>
+  </div>
+
+  <h2>Export Database</h2>
+  <p>Export your current database from localStorage to a <code>cms.db</code> file that can be placed in <code>/build/data/</code> folder.</p>
+  <button class="btn" onclick="exportDatabase()">📥 Export to cms.db</button>
+
+  <h2>Import Database</h2>
+  <p>Import a <code>.db</code> or <code>.sqlite</code> file into localStorage.</p>
+  <input type="file" id="fileInput" accept=".db,.sqlite" style="display:none">
+  <button class="btn" onclick="document.getElementById('fileInput').click()">📤 Import Database File</button>
+
+  <h2>Clear Database</h2>
+  <p>Remove the database from localStorage (fresh start).</p>
+  <button class="btn btn-danger" onclick="clearDatabase()">🗑️ Clear Database</button>
+
+  <div id="status"></div>
+
+  <hr style="margin: 40px 0;">
+  
+  <h2>Instructions</h2>
+  <ol>
+    <li><strong>To use a database file:</strong>
+      <ul>
+        <li>Export your database using the button above</li>
+        <li>Place <code>cms.db</code> in <code>/build/data/</code> folder</li>
+        <li>The app will automatically load from file on next visit</li>
+      </ul>
+    </li>
+    <li><strong>Supported filenames:</strong> <code>cms.db</code>, <code>sqlite.db</code>, <code>app.sqlite</code></li>
+    <li><strong>Priority:</strong> File system → localStorage → Create new</li>
+  </ol>
+
+  <script>
+    // Check database status
+    function checkStatus() {
+      const db = localStorage.getItem('cms_database');
+      const statusEl = document.getElementById('dbStatus');
+      
+      if (db) {
+        const sizeKB = Math.round((db.length * 0.75) / 1024); // base64 to bytes
+        statusEl.innerHTML = `✅ Database found in localStorage (${sizeKB} KB)`;
+      } else {
+        statusEl.innerHTML = '❌ No database in localStorage';
+      }
+    }
+
+    function showStatus(message, isError = false) {
+      const statusEl = document.getElementById('status');
+      statusEl.textContent = message;
+      statusEl.className = isError ? 'error' : 'success';
+      setTimeout(() => {
+        statusEl.textContent = '';
+        statusEl.className = '';
+      }, 5000);
+    }
+
+    function exportDatabase() {
+      const dbBase64 = localStorage.getItem('cms_database');
+      
+      if (!dbBase64) {
+        showStatus('No database found in localStorage', true);
+        return;
+      }
+
+      try {
+        // Convert base64 to binary
+        const binary = atob(dbBase64);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+
+        // Create download
+        const blob = new Blob([bytes], { type: 'application/x-sqlite3' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cms.db';
+        a.click();
+        URL.revokeObjectURL(url);
+
+        showStatus('✅ Database exported successfully as cms.db');
+      } catch (error) {
+        showStatus('❌ Export failed: ' + error.message, true);
+      }
+    }
+
+    function clearDatabase() {
+      if (confirm('Are you sure? This will delete all data from localStorage.')) {
+        localStorage.removeItem('cms_database');
+        localStorage.removeItem('cms_session');
+        showStatus('✅ Database cleared from localStorage');
+        checkStatus();
+      }
+    }
+
+    // Handle file import
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Convert to base64
+        let binary = '';
+        const len = uint8Array.byteLength;
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(uint8Array[i]);
+        }
+        const base64 = btoa(binary);
+
+        // Save to localStorage
+        localStorage.setItem('cms_database', base64);
+        
+        showStatus('✅ Database imported successfully. Refresh the app to use it.');
+        checkStatus();
+      } catch (error) {
+        showStatus('❌ Import failed: ' + error.message, true);
+      }
+    });
+
+    // Initial status check
+    checkStatus();
+  </script>
+</body>
+</html>
