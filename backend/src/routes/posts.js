@@ -9,16 +9,33 @@ router.get('/', async (req, res) => {
   const page = parseInt(req.query.page || '1', 10);
   const limit = Math.min(parseInt(req.query.limit || '10', 10), 50);
   const offset = (page - 1) * limit;
-  const rows = await knex('posts').orderBy('created_at', 'desc').limit(limit).offset(offset);
+  // Only return published content for public listing
+  const type = req.query.type || undefined;
+  let query = knex('posts').where({ status: 'published' });
+  if (type) query = query.andWhere({ type });
+  const rows = await query.orderBy('created_at', 'desc').limit(limit).offset(offset);
   return res.json({ data: rows, page, limit });
 });
 
 // GET /api/posts/:slug
 router.get('/:slug', async (req, res) => {
   const slug = req.params.slug;
-  const row = await knex('posts').where({ slug }).first();
+  // Only allow fetching published post/page by slug publicly
+  const row = await knex('posts').where({ slug, status: 'published' }).first();
   if (!row) return res.status(404).json({ error: 'not found' });
   return res.json({ data: row });
+});
+
+// GET /api/posts/all - admin listing (drafts + published)
+router.get('/admin/all', requireAuth, requireCapability('publish_post'), async (req, res) => {
+  const page = parseInt(req.query.page || '1', 10);
+  const limit = Math.min(parseInt(req.query.limit || '10', 10), 50);
+  const offset = (page - 1) * limit;
+  const type = req.query.type || undefined;
+  let query = knex('posts');
+  if (type) query = query.where({ type });
+  const rows = await query.orderBy('created_at', 'desc').limit(limit).offset(offset);
+  return res.json({ data: rows, page, limit });
 });
 
 // POST /api/posts (requires auth)

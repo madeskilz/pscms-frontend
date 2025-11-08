@@ -1,0 +1,17 @@
+/* Global theme-specific overrides */
+body.theme-classic { }
+body.theme-modern { }
+body.theme-vibrant { }
+body.theme-colorlib-kids { background: linear-gradient(180deg,#fffbe6 0%, #ffffff 100%); }
+body.theme-colorlib-education { background: linear-gradient(180deg,#f0f4ff 0%, #ffffff 100%); }
+body.theme-colorlib-fresh { background: linear-gradient(180deg,#f0fff5 0%, #ffffff 100%); }
+
+/* Basic link styling per theme */
+body.theme-colorlib-kids a { color: var(--color-primary); }
+body.theme-colorlib-education a { color: var(--color-primary); }
+body.theme-colorlib-fresh a { color: var(--color-primary); }
+
+/* Card accent */
+.theme-colorlib-kids .card-accent { border-top:4px solid var(--color-secondary); }
+.theme-colorlib-education .card-accent { border-top:4px solid var(--color-secondary); }
+.theme-colorlib-fresh .card-accent { border-top:4px solid var(--color-secondary); }

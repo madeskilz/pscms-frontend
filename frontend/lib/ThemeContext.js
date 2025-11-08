@@ -47,6 +47,11 @@ export function ThemeProvider({ children, initialTheme = 'classic' }) {
 
     return (
         <ThemeContext.Provider value={contextValue}>
+            {/* Toggle a theme class on body to help CSS target themes */}
+            <style jsx global>{`body { }
+            body.theme-class { }
+            `}</style>
+            <script dangerouslySetInnerHTML={{__html:`(function(){ try { document.body.classList.remove('theme-class'); document.body.classList.add('theme-${currentThemeId}'); } catch(e){} })();`}} />
             <style jsx global>{cssVariables}</style>
       {children}
     </ThemeContext.Provider>
