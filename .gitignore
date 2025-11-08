@@ -1,12 +1,41 @@
+# Build output
+/build
+/dist
+/frontend/out
+/backend/build
+
+# Dependencies
 node_modules/
+/frontend/node_modules
+/backend/node_modules
+
+# Database files
+*.sqlite-journal
+*.sqlite-wal
+
+# Environment variables
 /.env
-/data/
-/storage/uploads/
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js (legacy)
 /.next/
 frontend/.next/
 **/.next/
-dist/
-coverage/
+
+# Logs and temp
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
+
+# Data and uploads (keep in repo for demo)
+# /data/
+# /storage/uploads/
+
+# IDEs and OS
+.vscode
+.DS_Store
+Thumbs.db
