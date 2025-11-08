@@ -192,8 +192,8 @@ export default function AdminLayout({
             onClose={closeMenu}
             keepMounted
           >
-            <MenuItem component={NextLink} href="/admin" onClick={closeMenu}>
-              Profile
+            <MenuItem component={NextLink} href="/admin/profile" onClick={closeMenu}>
+              My Profile
             </MenuItem>
             <Divider />
             <MenuItem onClick={onLogout}>Logout</MenuItem>

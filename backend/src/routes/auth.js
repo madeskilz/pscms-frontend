@@ -117,4 +117,66 @@ router.get('/me', requireAuth, async (req, res) => {
   });
 });
 
+// PUT /api/auth/profile - update user profile
+router.put('/profile', requireAuth, async (req, res) => {
+  const { display_name } = req.body;
+  if (!display_name || !display_name.trim()) {
+    return res.status(400).json({ error: 'display_name is required' });
+  }
+  
+  try {
+    await knex('users')
+      .where({ id: req.user.id })
+      .update({ display_name: display_name.trim() });
+    
+    return res.json({ success: true, display_name: display_name.trim() });
+  } catch (err) {
+    console.error('Profile update error:', err);
+    return res.status(500).json({ error: 'Failed to update profile' });
+  }
+});
+
+// POST /api/auth/change-password - change user password
+router.post('/change-password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'currentPassword and newPassword are required' });
+  }
+  
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: 'New password must be at least 6 characters' });
+  }
+  
+  try {
+    const user = await knex('users').where({ id: req.user.id }).first();
+    if (!user || !user.password_hash) {
+      return res.status(401).json({ error: 'Invalid user' });
+    }
+    
+    // Verify current password
+    const match = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!match) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+    
+    // Hash and update new password
+    const newHash = await bcrypt.hash(newPassword, 12);
+    await knex('users')
+      .where({ id: req.user.id })
+      .update({ password_hash: newHash });
+    
+    // Revoke all refresh tokens for security
+    await knex('refresh_tokens')
+      .where({ user_id: req.user.id })
+      .where('revoked_at', null)
+      .update({ revoked_at: knex.fn.now() });
+    
+    return res.json({ success: true });
+  } catch (err) {
+    console.error('Password change error:', err);
+    return res.status(500).json({ error: 'Failed to change password' });
+  }
+});
+
 module.exports = router;
