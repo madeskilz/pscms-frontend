@@ -1,0 +1,14 @@
+{
+  "data": {
+    "id": 4,
+    "type": "post",
+    "status": "published",
+    "title": "Sports Day Highlights",
+    "content": "<p>Congratulations to all participants for a thrilling sports day!</p>",
+    "slug": "sports-day-highlights",
+    "author_id": 2,
+    "meta": null,
+    "created_at": "2025-11-08 03:45:53",
+    "updated_at": "2025-11-08 03:45:53"
+  }
+}

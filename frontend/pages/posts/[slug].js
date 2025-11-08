@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import { getPost, getSetting } from '../../lib/api'
+import { getPost } from '../../lib/api'
 import { useTheme } from '../../lib/ThemeContext'
 import { useEffect, useState } from 'react'
 import PublicLayout from '../../components/PublicLayout'
@@ -14,19 +14,38 @@ import CardContent from '@mui/material/CardContent'
 import Button from '@mui/material/Button'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
-export default function PostDetail({ post, error, initialTheme }) {
+export default function PostDetail() {
   const router = useRouter()
   const { theme, currentThemeId } = useTheme()
   const [HeroComponent, setHeroComponent] = useState(null)
+    const [post, setPost] = useState(null)
+    const [error, setError] = useState(null)
 
   useEffect(() => {
+      const initialTheme = 'classic'
     import(`../../themes/${currentThemeId || initialTheme}/components/Hero`)
       .then(mod => setHeroComponent(() => mod.default))
       .catch(() => {
         import(`../../themes/classic/components/Hero`)
           .then(mod => setHeroComponent(() => mod.default))
       })
-  }, [currentThemeId, initialTheme])
+  }, [currentThemeId])
+
+    useEffect(() => {
+        if (!router.isReady) return
+        const { slug } = router.query
+        let mounted = true
+        getPost(slug, null).then(res => {
+            if (!mounted) return
+            const p = res.data
+            if (p.status !== 'published') {
+                setError('Post not published')
+                return
+            }
+            setPost(p)
+        }).catch(err => setError(err?.message || 'Failed to load post'))
+        return () => { mounted = false }
+    }, [router.isReady, router.query])
 
     if (router.isFallback) {
         return (
@@ -41,10 +60,10 @@ export default function PostDetail({ post, error, initialTheme }) {
       <PublicLayout>
             <SEO title="Post Not Found" />
         <Container maxWidth="md" sx={{ py: 8 }}>
-          <Typography variant="h3" fontWeight={700} color="error" gutterBottom>
+                <Typography variant="h3" fontWeight={700} color="error" gutterBottom sx={{ fontFamily: theme.fonts.heading }}>
             Post not found
           </Typography>
-          <Button component={NextLink} href="/" variant="outlined" startIcon={<ArrowBackIcon />}>Back to home</Button>
+                <Button component={NextLink} href="/" variant="outlined" startIcon={<ArrowBackIcon />} sx={{ fontFamily: theme.fonts.body }}>Back to home</Button>
         </Container>
       </PublicLayout>
     )
@@ -95,7 +114,7 @@ export default function PostDetail({ post, error, initialTheme }) {
                               dangerouslySetInnerHTML={{ __html: post.content }}
                           />
                           <Box sx={{ mt: 4 }}>
-                              <Button component={NextLink} href="/" startIcon={<ArrowBackIcon />} variant="contained" color="primary">
+                              <Button component={NextLink} href="/" startIcon={<ArrowBackIcon />} variant="contained" color="primary" sx={{ fontFamily: theme.fonts.body }}>
                                   Back to home
                               </Button>
                           </Box>
@@ -107,19 +126,4 @@ export default function PostDetail({ post, error, initialTheme }) {
   )
 }
 
-export async function getServerSideProps({ params }) {
-  try {
-    const [postData, themeData] = await Promise.all([
-      getPost(params.slug, null),
-      getSetting('theme')
-    ])
-    const post = postData.data
-    if (post.status !== 'published') {
-      return { props: { error: 'Post not published', initialTheme: themeData?.active || 'classic' } }
-    }
-    return { props: { post, initialTheme: themeData?.active || 'classic' } }
-  } catch (error) {
-    console.error('Failed to fetch post:', error)
-    return { props: { error: error.message, initialTheme: 'classic' } }
-  }
-}
+// Removed getServerSideProps for static export. Client-side fetch implemented.

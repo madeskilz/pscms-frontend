@@ -1,5 +1,8 @@
 // Optimized API client with caching, retry logic, and error handling
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:3001';
+// For unified deployment (backend serves frontend), use relative URLs
+// For static deployment, tries /api/path/index.json first, then falls back to API server
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001');
+const USE_STATIC_API = process.env.NEXT_PUBLIC_STATIC_API === 'true';
 
 // Simple in-memory cache for GET requests
 const cache = new Map();
@@ -40,6 +43,21 @@ async function cachedFetch(url, options = {}) {
         // Check if request is already pending (request deduplication)
         if (pendingRequests.has(cacheKey)) {
             return pendingRequests.get(cacheKey);
+        }
+
+        // Try static JSON first for static deployments
+        if (USE_STATIC_API && typeof window !== 'undefined') {
+            try {
+                const staticPath = url.replace(API_BASE, '') + '/index.json';
+                const staticResponse = await fetch(staticPath);
+                if (staticResponse.ok) {
+                    const data = await staticResponse.json();
+                    cache.set(cacheKey, { data, timestamp: Date.now() });
+                    return data;
+                }
+            } catch (e) {
+                // Fall through to regular API call
+            }
         }
     }
 

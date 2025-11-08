@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/router'
 import NextLink from 'next/link'
 import { login } from '../../lib/api'
@@ -16,15 +16,61 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('admin@school.test')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+    const [checking, setChecking] = useState(true)
   const router = useRouter()
+    const isCheckingAuth = useRef(false)
 
   // If already authenticated, skip login
   useEffect(() => {
-    try {
-      const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null
-      if (token) router.replace('/admin')
-    } catch {}
-  }, [router])
+      // Prevent multiple checks (especially in React Strict Mode)
+      if (isCheckingAuth.current) return
+      isCheckingAuth.current = true
+
+      const checkAuth = async () => {
+        try {
+            const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null
+              if (token) {
+                  // Verify token is valid by calling /me endpoint
+                  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'}/api/auth/me`, {
+                      headers: { 'Authorization': `Bearer ${token}` }
+                  })
+                  if (response.ok) {
+                      // Valid token, redirect to admin (with loop protection)
+                      const lastRedirect = sessionStorage.getItem('_lastAuthRedirect');
+                      const now = Date.now();
+                      if (!lastRedirect || now - parseInt(lastRedirect) > 1000) {
+                          sessionStorage.setItem('_lastAuthRedirect', now.toString());
+                          await router.replace('/admin')
+                      }
+                      return
+                  } else {
+                      // Token is invalid, clear ALL sensitive data
+                      console.log('Invalid token, clearing all storage')
+                      sessionStorage.clear()
+                      localStorage.removeItem('accessToken')
+                      localStorage.removeItem('refreshToken')
+                  }
+              }
+          } catch (err) {
+              console.error('Auth check error:', err)
+              // Token verification failed, clear ALL sensitive data
+              if (typeof window !== 'undefined') {
+                  sessionStorage.clear()
+                  localStorage.removeItem('accessToken')
+                  localStorage.removeItem('refreshToken')
+              }
+          } finally {
+              setChecking(false)
+          }
+      };
+
+      checkAuth()
+
+      // Cleanup function
+      return () => {
+          isCheckingAuth.current = false
+      }
+  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -40,6 +86,23 @@ export default function AdminLogin() {
       setError(err.message || 'Login failed')
     }
   }
+
+    // Show loading state while checking authentication
+    if (checking) {
+        return (
+            <Box
+                sx={{
+                    minHeight: '100vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                }}
+            >
+                <Typography variant="h6" color="white">Loading...</Typography>
+            </Box>
+        )
+    }
 
   return (
     <Box

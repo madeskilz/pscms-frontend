@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/router';
 import { getMe, login as apiLogin } from '../api';
 
@@ -11,30 +11,69 @@ export function useAuth(requireAuth = false) {
   const [loading, setLoading] = useState(true);
   const [accessToken, setAccessToken] = useState(null);
   const router = useRouter();
+    const isCheckingAuth = useRef(false);
 
   useEffect(() => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null;
-    
-    if (!token) {
-      setLoading(false);
-      if (requireAuth) {
-        router.push('/admin/login');
+      // Prevent duplicate checks (especially in React Strict Mode)
+      if (isCheckingAuth.current) {
+          return;
       }
-      return;
-    }
+      isCheckingAuth.current = true;
 
-    setAccessToken(token);
-    
-    getMe(token)
-      .then(setUser)
-      .catch((error) => {
-        console.error('Auth error:', error);
-        if (requireAuth) {
-          router.push('/admin/login');
+      const checkAuth = async () => {
+          const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null;
+
+          if (!token) {
+              setLoading(false);
+          if (requireAuth && router.pathname !== '/admin/login') {
+              // Clear all sensitive data before redirecting to login
+              if (typeof window !== 'undefined') {
+                  sessionStorage.clear();
+                  // Also clear localStorage if you use it
+                  localStorage.removeItem('accessToken');
+                  localStorage.removeItem('refreshToken');
+              }
+            // Prevent redirect loop
+            const now = Date.now();
+            sessionStorage.setItem('_lastAuthRedirect', now.toString());
+            router.replace('/admin/login');
         }
-      })
-      .finally(() => setLoading(false));
-  }, [requireAuth, router]);
+          return;
+          } setAccessToken(token);
+
+          try {
+              const userData = await getMe(token);
+              setUser(userData);
+              setLoading(false);
+              // Clear redirect tracker on successful auth
+              if (typeof window !== 'undefined') {
+                  sessionStorage.removeItem('_lastAuthRedirect');
+            }
+        } catch (error) {
+        console.error('Auth error:', error);
+            // Clear ALL sensitive data on auth failure
+            if (typeof window !== 'undefined') {
+                sessionStorage.clear();
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+            }
+            setAccessToken(null);
+            setUser(null);
+            setLoading(false);
+            if (requireAuth && router.pathname !== '/admin/login') {
+                // Prevent redirect loop
+                const now = Date.now();
+                sessionStorage.setItem('_lastAuthRedirect', now.toString());
+                router.replace('/admin/login');
+            }
+        }
+      }; checkAuth();
+
+      // Cleanup function to reset the flag when component unmounts
+      return () => {
+          isCheckingAuth.current = false;
+      };
+  }, []);
 
   const login = useCallback(async (email, password) => {
     const data = await apiLogin(email, password);
@@ -49,8 +88,10 @@ export function useAuth(requireAuth = false) {
 
   const logout = useCallback(() => {
     if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('accessToken');
-      sessionStorage.removeItem('refreshToken');
+        // Clear ALL sensitive data on logout
+        sessionStorage.clear();
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
     }
     setAccessToken(null);
     setUser(null);

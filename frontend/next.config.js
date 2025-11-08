@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
+const isExport = process.env.EXPORT === 'true';
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+    // Generate static HTML for bucket hosting
+    output: 'export',
 
     // Image optimization
     images: {
@@ -10,6 +13,8 @@ const nextConfig = {
         deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
         imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
         minimumCacheTTL: 60,
+        // Required for next export/static hosting of next/image assets
+        unoptimized: isExport,
     },
 
     // Performance optimizations

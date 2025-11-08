@@ -1,0 +1,14 @@
+{
+  "data": {
+    "id": 1,
+    "type": "page",
+    "status": "published",
+    "title": "About Us",
+    "content": "<p>We are a vibrant learning community committed to excellence.</p>",
+    "slug": "about",
+    "author_id": 2,
+    "meta": null,
+    "created_at": "2025-11-08 03:45:53",
+    "updated_at": "2025-11-08 03:45:53"
+  }
+}

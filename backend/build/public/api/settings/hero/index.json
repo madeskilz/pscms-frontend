@@ -1,0 +1,11 @@
+{
+  "key": "hero",
+  "value": {
+    "title": "Welcome to Sunshine Primary School",
+    "subtitle": "Where every child shines bright and discovers their unique potential through joyful learning",
+    "ctaText": "Explore Our Programs",
+    "ctaLink": "/about",
+    "secondaryCtaText": "Book a Tour",
+    "secondaryCtaLink": "/contact"
+  }
+}

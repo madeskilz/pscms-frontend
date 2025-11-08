@@ -24,10 +24,10 @@ export default function ContactPage() {
       <PublicNav />
       <Container maxWidth="md" sx={{ py: 8, flex: 1 }}>
         <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography variant="h2" component="h1" gutterBottom fontWeight={800} color="primary">
+                      <Typography variant="h2" component="h1" gutterBottom fontWeight={800} color="primary" sx={{ fontFamily: theme.fonts.heading }}>
             Contact Us
           </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto' }}>
+                      <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '600px', mx: 'auto', fontFamily: theme.fonts.body }}>
             We'd love to hear from you! Reach out with any questions, feedback, or enrollment inquiries.
           </Typography>
         </Box>
@@ -68,16 +68,16 @@ export default function ContactPage() {
                 fullWidth
                 variant="contained"
                 size="large"
-                sx={{ mt: 4, py: 1.8, fontSize: '1.1rem', fontWeight: 700, borderRadius: 2 }}
+                                  sx={{ mt: 4, py: 1.8, fontSize: '1.1rem', fontWeight: 700, borderRadius: 2, fontFamily: theme.fonts.body }}
               >
                 Send Message
               </Button>
             </Box>
             <Box sx={{ mt: 4, p: 3, borderRadius: 2, bgcolor: 'grey.50', textAlign: 'center' }}>
-              <Typography variant="body1" color="text.secondary" gutterBottom>
+                              <Typography variant="body1" color="text.secondary" gutterBottom sx={{ fontFamily: theme.fonts.body }}>
                 Or email us directly at:
               </Typography>
-              <Link href="mailto:info@school.test" sx={{ fontSize: '1.1rem', fontWeight: 600 }}>info@school.test</Link>
+                              <Link href="mailto:info@school.test" sx={{ fontSize: '1.1rem', fontWeight: 600, fontFamily: theme.fonts.body }}>info@school.test</Link>
             </Box>
           </CardContent>
         </Card>

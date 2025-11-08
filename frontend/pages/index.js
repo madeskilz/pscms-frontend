@@ -38,17 +38,49 @@ const PostCard = memo(function PostCard({ post }) {
     );
 });
 
-export default function Home({ posts, initialTheme, homepage, hero, features }) {
-  const { theme, currentThemeId } = useTheme()
-  const [HeroComponent, setHeroComponent] = useState(null)
+export default function Home() {
+    const { theme, currentThemeId } = useTheme()
+    const [HeroComponent, setHeroComponent] = useState(null)
     const [FeaturesComponent, setFeaturesComponent] = useState(null)
     const [heroLoading, setHeroLoading] = useState(true)
+    const [posts, setPosts] = useState([])
+    const [homepage, setHomepage] = useState(null)
+    const [hero, setHero] = useState(null)
+    const [features, setFeatures] = useState([])
 
+    const initialTheme = 'classic'
     const themeId = currentThemeId || initialTheme;
     const hasFeatures = useMemo(() =>
         ['colorlib-fresh', 'colorlib-kids', 'colorlib-education'].includes(themeId),
         [themeId]
     );
+
+    useEffect(() => {
+        let mounted = true
+        async function loadData() {
+            try {
+                const [postsData, homepageSetting, heroSetting, featuresSetting] = await Promise.all([
+                    getPosts(null, 1, 'post'),
+                    getSetting('homepage'),
+                    getSetting('hero'),
+                    getSetting('features')
+                ])
+                if (!mounted) return
+                const published = (postsData.data || []).filter(p => p.status === 'published')
+                setPosts(published)
+                setHomepage(homepageSetting || null)
+                setHero(heroSetting || null)
+                setFeatures(featuresSetting || [])
+            } catch (e) {
+                setPosts([])
+                setHomepage(null)
+                setHero(null)
+                setFeatures([])
+            }
+        }
+        loadData()
+        return () => { mounted = false }
+    }, [])
 
   useEffect(() => {
       setHeroLoading(true);
@@ -103,10 +135,10 @@ export default function Home({ posts, initialTheme, homepage, hero, features }) 
                       <Box sx={{ py: 10, bgcolor: 'grey.50' }}>
                           <Container maxWidth="lg">
                               <Box sx={{ textAlign: 'center', mb: 8 }}>
-                                  <Typography variant="h3" component="h2" fontWeight={700} color="primary" gutterBottom>
+                                  <Typography variant="h3" component="h2" fontWeight={700} color="primary" gutterBottom sx={{ fontFamily: theme.fonts.heading }}>
                                       Why Choose Us
                                   </Typography>
-                                  <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '800px', mx: 'auto' }}>
+                                  <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '800px', mx: 'auto', fontFamily: theme.fonts.body }}>
                                       Discover what makes our school the perfect place for your child's educational journey
                                   </Typography>
                               </Box>
@@ -161,10 +193,10 @@ export default function Home({ posts, initialTheme, homepage, hero, features }) 
                   <Container maxWidth="lg" sx={{ py: 8 }}>
                                             {/* Parent Quick Links Section */}
                                             <Box sx={{ mb: 10 }}>
-                                                <Typography variant="h3" component="h2" gutterBottom fontWeight={700} color="text.primary" sx={{ mb: 1 }}>
+                          <Typography variant="h3" component="h2" gutterBottom fontWeight={700} color="text.primary" sx={{ mb: 1, fontFamily: theme.fonts.heading }}>
                                                     For Parents
                                                 </Typography>
-                                                <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: '800px' }}>
+                          <Typography variant="body1" color="text.secondary" sx={{ mb: 4, maxWidth: '800px', fontFamily: theme.fonts.body }}>
                                                     Quick access to essential resources and information for parents and guardians.
                                                 </Typography>
                                                 <Grid container spacing={3}>
@@ -213,10 +245,10 @@ export default function Home({ posts, initialTheme, homepage, hero, features }) 
                               color: '#fff',
                               boxShadow: '0 10px 40px rgba(0,0,0,0.15)'
                           }}>
-                              <Typography variant="h3" component="h2" gutterBottom fontWeight={700} sx={{ color: '#fff', mb: 1 }}>
+                              <Typography variant="h3" component="h2" gutterBottom fontWeight={700} sx={{ color: '#fff', mb: 1, fontFamily: theme.fonts.heading }}>
                                   Featured Posts
                               </Typography>
-                              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.95)', mb: 4, maxWidth: '800px' }}>
+                              <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.95)', mb: 4, maxWidth: '800px', fontFamily: theme.fonts.body }}>
                                   Highlighted content and important updates from our school community.
                               </Typography>
                               <Grid container spacing={3} sx={{ mt: 1 }}>
@@ -248,19 +280,19 @@ export default function Home({ posts, initialTheme, homepage, hero, features }) 
                       )}
 
                       <Box sx={{ mb: 5 }}>
-                          <Typography variant="h3" component="h2" gutterBottom fontWeight={700} color="text.primary" sx={{ mb: 1 }}>
+                          <Typography variant="h3" component="h2" gutterBottom fontWeight={700} color="text.primary" sx={{ mb: 1, fontFamily: theme.fonts.heading }}>
                               {homepage?.postsSectionTitle || 'Latest News & Updates'}
                           </Typography>
-                          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: '800px' }}>
+                          <Typography variant="body1" color="text.secondary" sx={{ maxWidth: '800px', fontFamily: theme.fonts.body }}>
                               Stay informed with the latest announcements, events, and stories from our school.
                           </Typography>
                       </Box>
                       {posts.length === 0 && (
                           <Box sx={{ textAlign: 'center', py: 8 }}>
-                              <Typography variant="h5" color="text.secondary" gutterBottom>
+                              <Typography variant="h5" color="text.secondary" gutterBottom sx={{ fontFamily: theme.fonts.heading }}>
                                   No published posts yet
                               </Typography>
-                              <Typography variant="body1" color="text.secondary">
+                              <Typography variant="body1" color="text.secondary" sx={{ fontFamily: theme.fonts.body }}>
                                   Check back soon for updates and announcements!
                               </Typography>
                           </Box>
@@ -280,27 +312,4 @@ export default function Home({ posts, initialTheme, homepage, hero, features }) 
   )
 }
 
-export async function getServerSideProps() {
-  try {
-      const [postsData, themeData, homepageSetting, heroSetting, featuresSetting] = await Promise.all([
-          getPosts(null, 1, 'post'),
-          getSetting('theme'),
-          getSetting('homepage'),
-          getSetting('hero'),
-          getSetting('features')
-      ])
-    const published = (postsData.data || []).filter(p => p.status === 'published')
-    return { 
-      props: { 
-            posts: published,
-            initialTheme: themeData?.active || 'classic',
-            homepage: homepageSetting || null,
-            hero: heroSetting || null,
-            features: featuresSetting || []
-      } 
-    }
-  } catch (error) {
-    console.error('Failed to fetch data for homepage:', error)
-      return { props: { posts: [], initialTheme: 'classic', homepage: null, hero: null, features: [] } }
-  }
-}
+// Converted to client-side fetching for static export

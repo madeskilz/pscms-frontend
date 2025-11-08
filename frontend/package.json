@@ -9,6 +9,7 @@
     "lint": "next lint",
     "analyze": "ANALYZE=true next build",
     "export": "next export",
+    "build:static": "cross-env EXPORT=true next build",
     "build:analyze": "cross-env ANALYZE=true npm run build",
     "clean": "rm -rf .next out node_modules/.cache"
   },

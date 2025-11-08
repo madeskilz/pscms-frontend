@@ -176,17 +176,53 @@ Central hub with access to:
 
 Change theme from `/admin/settings`
 
-## 🚀 Production Build
+## 🚀 Production Deployment
+
+### Option 1: Pure Static (No Node.js Required)
+
+Perfect for maximum performance and zero server costs:
+
+```bash
+./build-all.sh --static-only --clean
+```
+
+This creates `dist/static-complete.zip` with:
+- All pages pre-rendered as HTML
+- API responses as static JSON files
+- No backend server needed
+
+**Upload to:** AWS S3, Netlify, Vercel, GitHub Pages, cPanel, or any static host.
+
+📖 **See [README-STATIC-DEPLOYMENT.md](README-STATIC-DEPLOYMENT.md) for complete guide**
+
+### Option 2: Unified Deployment (Strapi-style)
+
+Backend serves both API and frontend from one Node.js app:
+
+```bash
+./build-all.sh --backend-bundle --clean
+```
+
+Upload `backend/build` to cPanel/VPS and run:
+```bash
+cd backend/build
+npm start
+```
+
+### Option 3: Separate Frontend/Backend
+
+Traditional split deployment:
 
 ```bash
 # Backend
 cd backend
-yarn start
+npm run build
+npm start
 
 # Frontend
 cd frontend
-yarn build
-yarn start
+npm run build
+npm start
 ```
 
 ## 📦 Project Structure

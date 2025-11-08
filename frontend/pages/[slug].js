@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router'
-import { getPost, getSetting } from '../lib/api'
+import { getPost } from '../lib/api'
 import { useTheme } from '../lib/ThemeContext'
 import { useEffect, useState } from 'react'
 import PublicLayout from '../components/PublicLayout'
@@ -14,19 +14,36 @@ import CardContent from '@mui/material/CardContent'
 import Button from '@mui/material/Button'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 
-export default function PageDetail({ page, error, initialTheme }) {
+export default function PageDetail() {
   const router = useRouter()
   const { theme, currentThemeId } = useTheme()
   const [HeroComponent, setHeroComponent] = useState(null)
+  const [page, setPage] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
+    const initialTheme = 'classic'
     import(`../themes/${currentThemeId || initialTheme}/components/Hero`)
       .then(mod => setHeroComponent(() => mod.default))
       .catch(() => {
         import(`../themes/classic/components/Hero`)
           .then(mod => setHeroComponent(() => mod.default))
       })
-  }, [currentThemeId, initialTheme])
+  }, [currentThemeId])
+
+  useEffect(() => {
+    if (!router.isReady) return
+    const { slug } = router.query
+    let mounted = true
+    getPost(slug, null).then(res => {
+      if (!mounted) return
+      const p = res.data
+      if (p.status !== 'published') { setError('Page not published'); return }
+      if (p.type !== 'page') { setError('Not a page'); return }
+      setPage(p)
+    }).catch(err => setError(err?.message || 'Failed to load page'))
+    return () => { mounted = false }
+  }, [router.isReady, router.query])
 
   if (router.isFallback) {
     return (
@@ -103,27 +120,4 @@ export default function PageDetail({ page, error, initialTheme }) {
   )
 }
 
-export async function getServerSideProps({ params }) {
-  try {
-    const [pageData, themeData] = await Promise.all([
-      getPost(params.slug, null),
-      getSetting('theme')
-    ])
-    const page = pageData.data
-    
-    // Only show published pages
-    if (page.status !== 'published') {
-      return { props: { error: 'Page not published', initialTheme: themeData?.active || 'classic' } }
-    }
-    
-    // Only show pages (not posts)
-    if (page.type !== 'page') {
-      return { props: { error: 'Not a page', initialTheme: themeData?.active || 'classic' } }
-    }
-    
-    return { props: { page, initialTheme: themeData?.active || 'classic' } }
-  } catch (error) {
-    console.error('Failed to fetch page:', error)
-    return { props: { error: error.message, initialTheme: 'classic' } }
-  }
-}
+// Removed getServerSideProps for static export. Client-side fetch implemented.

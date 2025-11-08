@@ -1,4 +1,5 @@
 import { getPosts } from '../../lib/api';
+import { useEffect, useState } from 'react';
 import NextLink from 'next/link';
 import PublicNav from '../../components/PublicNav';
 import SEO from '../../components/SEO';
@@ -12,8 +13,18 @@ import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import CardActionArea from '@mui/material/CardActionArea';
 
-export default function PostsPage({ posts }) {
+export default function PostsPage() {
   const { theme } = useTheme();
+    const [posts, setPosts] = useState([])
+    useEffect(() => {
+        let mounted = true
+        getPosts(null, 1, 'post').then(data => {
+            if (!mounted) return
+            const published = (data.data || []).filter(p => p.status === 'published')
+            setPosts(published)
+        }).catch(() => setPosts([]))
+        return () => { mounted = false }
+    }, [])
   return (
       <>
           <SEO
@@ -25,19 +36,19 @@ export default function PostsPage({ posts }) {
       <PublicNav />
       <Container maxWidth="lg" sx={{ py: 8, flex: 1 }}>
         <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography variant="h2" component="h1" gutterBottom fontWeight={800} color="primary">
+                      <Typography variant="h2" component="h1" gutterBottom fontWeight={800} color="primary" sx={{ fontFamily: theme.fonts.heading }}>
             News & Updates
           </Typography>
-          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '700px', mx: 'auto' }}>
+                      <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '700px', mx: 'auto', fontFamily: theme.fonts.body }}>
             Stay informed with the latest announcements, events, and stories from our school community
           </Typography>
         </Box>
         {posts.length === 0 && (
           <Box sx={{ textAlign: 'center', py: 10 }}>
-            <Typography variant="h5" color="text.secondary" gutterBottom>
+                          <Typography variant="h5" color="text.secondary" gutterBottom sx={{ fontFamily: theme.fonts.heading }}>
               No posts available yet
             </Typography>
-            <Typography variant="body1" color="text.secondary">
+                          <Typography variant="body1" color="text.secondary" sx={{ fontFamily: theme.fonts.body }}>
               Check back soon for updates!
             </Typography>
           </Box>
@@ -70,12 +81,4 @@ export default function PostsPage({ posts }) {
   );
 }
 
-export async function getServerSideProps() {
-  try {
-    const postsData = await getPosts(null, 1, 'post');
-    const published = (postsData.data || []).filter(p => p.status === 'published');
-    return { props: { posts: published } };
-  } catch (error) {
-    return { props: { posts: [] } };
-  }
-}
+// Removed getServerSideProps for static export. Client-side fetch implemented.

@@ -28,11 +28,11 @@ const defaultLinks = [
 const NavLink = memo(function NavLink({ link, theme }) {
     return (
         link.external ? (
-            <Button component="a" href={link.href} target="_blank" rel="noopener noreferrer" sx={{ color: theme.colors.text, fontWeight: 500 }}>
+            <Button component="a" href={link.href} target="_blank" rel="noopener noreferrer" sx={{ color: theme.colors.text, fontWeight: 500, fontFamily: theme.fonts.body }}>
             {link.label}
             </Button>
         ) : (
-            <Button component={NextLink} href={link.href} sx={{ color: theme.colors.text, fontWeight: 500 }}>
+                <Button component={NextLink} href={link.href} sx={{ color: theme.colors.text, fontWeight: 500, fontFamily: theme.fonts.body }}>
                 {link.label}
             </Button>
         )
@@ -102,6 +102,7 @@ export default function PublicNav() {
                 px: 3,
                 borderRadius: 2,
                 boxShadow: 2,
+                  fontFamily: theme.fonts.body,
                 '&:hover': {
                   boxShadow: 4,
                   transform: 'translateY(-1px)'
@@ -125,20 +126,20 @@ export default function PublicNav() {
           <Drawer anchor="right" open={open} onClose={handleDrawerClose}>
               <Box sx={{ width: 280 }} role="presentation" onClick={handleDrawerClose}>
           <Box sx={{ p: 3, bgcolor: 'primary.main', color: '#fff' }}>
-            <Typography variant="h5" fontWeight={700}>Menu</Typography>
+                      <Typography variant="h5" fontWeight={700} sx={{ fontFamily: theme.fonts.heading }}>Menu</Typography>
           </Box>
           <List sx={{ pt: 2 }}>
             {links.map(l => (
               <ListItem key={l.href} disablePadding>
                 <ListItemButton component={NextLink} href={l.href} sx={{ py: 1.5, px: 3 }}>
-                  <ListItemText primary={l.label} primaryTypographyProps={{ fontWeight: 500 }} />
+                        <ListItemText primary={l.label} primaryTypographyProps={{ fontWeight: 500, fontFamily: theme.fonts.body }} />
                 </ListItemButton>
               </ListItem>
             ))}
             <Divider sx={{ my: 2 }} />
             <ListItem disablePadding>
               <ListItemButton component={NextLink} href="/admin" sx={{ py: 1.5, px: 3, bgcolor: 'primary.light', '&:hover': { bgcolor: 'primary.main', color: '#fff' } }}>
-                <ListItemText primary="Admin Login" primaryTypographyProps={{ fontWeight: 600 }} />
+                              <ListItemText primary="Admin Login" primaryTypographyProps={{ fontWeight: 600, fontFamily: theme.fonts.body }} />
               </ListItemButton>
             </ListItem>
           </List>
