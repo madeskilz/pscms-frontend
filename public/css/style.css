@@ -542,3 +542,86 @@ body {
     padding: 0.5rem;
   }
 }
+
+/* Database Setup Notification */
+.db-notification {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #3498db;
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  max-width: 400px;
+  z-index: 10000;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.db-notification h4 {
+  margin: 0 0 10px 0;
+  font-size: 1.1rem;
+}
+
+.db-notification p {
+  margin: 5px 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.db-notification ol {
+  margin: 10px 0;
+  padding-left: 20px;
+  font-size: 0.9rem;
+}
+
+.db-notification li {
+  margin: 5px 0;
+}
+
+.db-notification button {
+  background: white;
+  color: #3498db;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 10px;
+  font-weight: 500;
+}
+
+.db-notification button:hover {
+  background: #ecf0f1;
+}
+
+.db-notification .close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+}
+
+.db-notification .close-btn:hover {
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+}
