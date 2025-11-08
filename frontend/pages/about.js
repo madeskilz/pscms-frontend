@@ -1,5 +1,6 @@
 import { useTheme } from '../lib/ThemeContext';
 import PublicLayout from '../components/PublicLayout';
+import SEO from '../components/SEO';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
@@ -12,6 +13,12 @@ export default function AboutPage() {
   const { theme } = useTheme();
 
   return (
+      <>
+          <SEO
+              title="About Us"
+              description="Learn about our school's mission, values, and facilities. We are committed to providing quality education for Nigerian K12 students."
+              keywords={['about', 'school', 'mission', 'values', 'facilities']}
+          />
     <PublicLayout>
       <Container maxWidth="md" sx={{ py: 4 }}>
         <Typography variant="h2" fontWeight={800} color="primary" sx={{ fontFamily: theme.fonts.heading, mb: 3 }}>
@@ -94,5 +101,6 @@ export default function AboutPage() {
         </Box>
       </Container>
     </PublicLayout>
+      </>
   );
 }

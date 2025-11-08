@@ -1,6 +1,7 @@
 import { getPosts } from '../../lib/api';
 import NextLink from 'next/link';
 import PublicNav from '../../components/PublicNav';
+import SEO from '../../components/SEO';
 import PublicFooter from '../../components/PublicFooter';
 import { useTheme } from '../../lib/ThemeContext';
 import Container from '@mui/material/Container';
@@ -14,6 +15,12 @@ import CardActionArea from '@mui/material/CardActionArea';
 export default function PostsPage({ posts }) {
   const { theme } = useTheme();
   return (
+      <>
+          <SEO
+              title="News & Posts"
+              description="Browse our latest news, articles, and updates from the school."
+              keywords={['news', 'posts', 'articles', 'updates', 'blog']}
+          />
     <Box sx={{ backgroundColor: theme.colors.background, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <PublicNav />
       <Container maxWidth="lg" sx={{ py: 6, flex: 1 }}>
@@ -49,6 +56,7 @@ export default function PostsPage({ posts }) {
       </Container>
       <PublicFooter />
     </Box>
+      </>
   );
 }
 

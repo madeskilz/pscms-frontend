@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, memo, useMemo } from 'react'
 import NextLink from 'next/link'
 import { useTheme } from '../lib/ThemeContext'
 import AppBar from '@mui/material/AppBar'
@@ -15,16 +15,32 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
 import Divider from '@mui/material/Divider'
 
-export default function PublicNav() {
-  const { theme } = useTheme()
-  const [open, setOpen] = useState(false)
-
-  const links = [
+const links = [
     { label: 'Home', href: '/' },
     { label: 'About', href: '/about' },
     { label: 'News & Posts', href: '/posts' },
     { label: 'Contact', href: '/contact' }
-  ]
+];
+
+// Memoized NavLink component
+const NavLink = memo(function NavLink({ link, theme }) {
+    return (
+        <Button
+            component={NextLink}
+            href={link.href}
+            sx={{ color: theme.colors.text, fontWeight: 500 }}
+        >
+            {link.label}
+        </Button>
+    );
+});
+
+export default function PublicNav() {
+    const { theme } = useTheme()
+    const [open, setOpen] = useState(false)
+
+    const handleDrawerToggle = () => setOpen(!open)
+    const handleDrawerClose = () => setOpen(false)
 
   return (
     <>
@@ -40,14 +56,7 @@ export default function PublicNav() {
           </Box>
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' }, gap: 3 }}>
             {links.map(l => (
-              <Button
-                key={l.href}
-                component={NextLink}
-                href={l.href}
-                sx={{ color: theme.colors.text, fontWeight: 500 }}
-              >
-                {l.label}
-              </Button>
+                <NavLink key={l.href} link={l} theme={theme} />
             ))}
           </Box>
           <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
@@ -65,7 +74,7 @@ export default function PublicNav() {
           </Box>
           <IconButton
             edge="end"
-            onClick={() => setOpen(true)}
+                      onClick={handleDrawerToggle}
             sx={{ display: { md: 'none' }, ml: 'auto', color: theme.colors.primary }}
             aria-label="Open navigation menu"
           >
@@ -73,8 +82,8 @@ export default function PublicNav() {
           </IconButton>
         </Toolbar>
       </AppBar>
-      <Drawer anchor="right" open={open} onClose={() => setOpen(false)}>
-        <Box sx={{ width: 260 }} role="presentation" onClick={() => setOpen(false)}>
+          <Drawer anchor="right" open={open} onClose={handleDrawerClose}>
+              <Box sx={{ width: 260 }} role="presentation" onClick={handleDrawerClose}>
           <Box sx={{ p: 2 }}>
             <Typography variant="h6" fontWeight={700} color="primary">Menu</Typography>
           </Box>

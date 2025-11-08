@@ -3,7 +3,13 @@ const fs = require('fs');
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const sharp = require('sharp');
+// Sharp is optional - only use if Node.js >= 18
+let sharp = null;
+try {
+    sharp = require('sharp');
+} catch (e) {
+    console.warn('Sharp module not available - image resizing disabled. Upgrade to Node.js >= 18 to enable.');
+}
 const knex = require('knex')(require('../../knexfile')[process.env.NODE_ENV || 'development']);
 const requireAuth = require('../middlewares/auth');
 const { requireCapability } = require('../middlewares/rbac');
@@ -60,8 +66,8 @@ router.post('/upload', requireAuth, requireCapability('upload_media'), upload.si
   const relPath = path.relative(uploadDir, file.path);
   const meta = { derivatives: [] };
 
-  // Attempt image derivatives if image/*
-  if ((file.mimetype || '').startsWith('image/')) {
+    // Attempt image derivatives if image/* and sharp is available
+    if (sharp && (file.mimetype || '').startsWith('image/')) {
     try {
       const parsed = path.parse(file.path);
       const sizes = [800, 400];

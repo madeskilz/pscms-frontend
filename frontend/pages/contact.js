@@ -1,6 +1,7 @@
 import PublicNav from '../components/PublicNav';
 import PublicFooter from '../components/PublicFooter';
 import { useTheme } from '../lib/ThemeContext';
+import SEO from '../components/SEO';
 import Container from '@mui/material/Container';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -13,6 +14,12 @@ import Link from '@mui/material/Link';
 export default function ContactPage() {
   const { theme } = useTheme();
   return (
+      <>
+          <SEO
+              title="Contact Us"
+              description="Get in touch with us for enrollment inquiries, questions, or feedback. We'd love to hear from you."
+              keywords={['contact', 'email', 'enrollment', 'inquiries']}
+          />
     <Box sx={{ backgroundColor: theme.colors.background, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <PublicNav />
       <Container maxWidth="md" sx={{ py: 6, flex: 1 }}>
@@ -71,5 +78,6 @@ export default function ContactPage() {
       </Container>
       <PublicFooter />
     </Box>
+      </>
   );
 }

@@ -1,8 +1,10 @@
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/router'
+import { memo } from 'react'
 import NextLink from 'next/link'
-import { getPosts, deletePost } from '../../lib/api'
+import { useAuth } from '../../../lib/hooks/useAuth'
+import { usePosts } from '../../../lib/hooks/usePosts'
 import AdminLayout from '../../../components/AdminLayout'
+import { PageSkeleton } from '../../../components/Skeletons'
+import SEO from '../../../components/SEO'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
 import Button from '@mui/material/Button'
@@ -16,103 +18,90 @@ import Tooltip from '@mui/material/Tooltip'
 import AddIcon from '@mui/icons-material/Add'
 import EditIcon from '@mui/icons-material/Edit'
 import DeleteIcon from '@mui/icons-material/Delete'
-import ArrowBackIcon from '@mui/icons-material/ArrowBack'
+
+// Memoized PostItem component
+const PostItem = memo(function PostItem({ post, onDelete }) {
+    return (
+        <Grid item xs={12}>
+            <Card elevation={3}>
+                <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="h6" fontWeight={700} noWrap gutterBottom>
+                            {post.title || '(Untitled)'}
+                        </Typography>
+                        <Stack direction="row" spacing={2} sx={{ color: 'text.secondary' }}>
+                            <Chip size="small" label={post.status} color={post.status === 'published' ? 'success' : 'default'} />
+                            <Typography variant="caption" title={post.slug} noWrap>{post.slug}</Typography>
+                            <Typography variant="caption">{new Date(post.created_at).toLocaleDateString()}</Typography>
+                        </Stack>
+                    </Box>
+                    <Stack direction="row" spacing={1}>
+                        <Tooltip title="Edit">
+                            <IconButton component={NextLink} href={`/admin/posts/${post.id}`} color="primary">
+                                <EditIcon />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete">
+                            <IconButton color="error" onClick={() => onDelete(post.id)}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </Tooltip>
+                    </Stack>
+                </CardContent>
+            </Card>
+        </Grid>
+    );
+});
 
 export default function AdminPosts() {
-  const [accessToken, setAccessToken] = useState(null)
-  const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
-
-  useEffect(() => {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem('accessToken') : null
-    if (!token) {
-      router.push('/admin/login')
-      return
-    }
-    setAccessToken(token)
-    loadPosts(token)
-  }, [router])
-
-  const loadPosts = async (token) => {
-    try {
-      const data = await getPosts(token)
-      setPosts(data.data || [])
-    } catch (err) {
-      console.error('Failed to load posts', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+    const { loading: authLoading, accessToken } = useAuth(true)
+    const { posts, loading: postsLoading, remove } = usePosts(accessToken)
 
   const handleDelete = async (id) => {
     if (!confirm('Delete this post?')) return
     try {
-      await deletePost(id, accessToken)
-      await loadPosts(accessToken)
+        await remove(id)
     } catch (err) {
       alert('Failed to delete post')
     }
   }
 
-  if (loading) return <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Loading...</Box>
+    if (authLoading || !accessToken) return <PageSkeleton />
 
   return (
-    <AdminLayout title="Posts" backHref="/admin">
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" fontWeight={700}>Posts</Typography>
-        <Button
-          component={NextLink}
-          href="/admin/posts/new"
-          variant="contained"
-          startIcon={<AddIcon />}
-        >
-          New Post
-        </Button>
-      </Box>
+      <>
+          <SEO title="Manage Posts" />
+          <AdminLayout title="Posts" backHref="/admin">
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                  <Typography variant="h4" fontWeight={700}>Posts</Typography>
+                  <Button
+                      component={NextLink}
+                      href="/admin/posts/new"
+                      variant="contained"
+                      startIcon={<AddIcon />}
+                  >
+                      New Post
+                  </Button>
+              </Box>
 
-      {posts.length === 0 && (
-        <Card elevation={2}>
-          <CardContent>
-            <Typography variant="body1" color="text.secondary">
-              No posts yet. Create your first post!
-            </Typography>
-          </CardContent>
-        </Card>
-      )}
-
-      <Grid container spacing={3} sx={{ mt: 0 }}>
-        {posts.map((post) => (
-          <Grid item xs={12} key={post.id}>
-            <Card elevation={3}>
-              <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 2 }}>
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="h6" fontWeight={700} noWrap gutterBottom>
-                    {post.title || '(Untitled)'}
-                  </Typography>
-                  <Stack direction="row" spacing={2} sx={{ color: 'text.secondary' }}>
-                    <Chip size="small" label={post.status} color={post.status === 'published' ? 'success' : 'default'} />
-                    <Typography variant="caption" title={post.slug} noWrap>{post.slug}</Typography>
-                    <Typography variant="caption">{new Date(post.created_at).toLocaleDateString()}</Typography>
-                  </Stack>
-                </Box>
-                <Stack direction="row" spacing={1}>
-                  <Tooltip title="Edit">
-                    <IconButton component={NextLink} href={`/admin/posts/${post.id}`} color="primary">
-                      <EditIcon />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Delete">
-                    <IconButton color="error" onClick={() => handleDelete(post.id)}>
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-    </AdminLayout>
+              {postsLoading ? (
+                  <Typography>Loading posts...</Typography>
+              ) : posts.length === 0 ? (
+                  <Card elevation={2}>
+                      <CardContent>
+                          <Typography variant="body1" color="text.secondary">
+                              No posts yet. Create your first post!
+                          </Typography>
+                      </CardContent>
+                  </Card>
+                  ) : (
+                      <Grid container spacing={3} sx={{ mt: 0 }}>
+                          {posts.map((post) => (
+                <PostItem key={post.id} post={post} onDelete={handleDelete} />
+            ))}
+                          </Grid>
+              )}
+          </AdminLayout>
+      </>
   )
 }

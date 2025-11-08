@@ -1,12 +1,11 @@
 import { useRouter } from 'next/router'
 import { getPost, getSetting } from '../../lib/api'
-import Link from 'next/link'
 import { useTheme } from '../../lib/ThemeContext'
 import { useEffect, useState } from 'react'
-import PublicNav from '../../components/PublicNav'
-import PublicFooter from '../../components/PublicFooter'
-import NextLink from 'next/link'
 import PublicLayout from '../../components/PublicLayout'
+import SEO, { SchemaOrg } from '../../components/SEO'
+import { HeroSkeleton } from '../../components/Skeletons'
+import NextLink from 'next/link'
 import Container from '@mui/material/Container'
 import Box from '@mui/material/Box'
 import Typography from '@mui/material/Typography'
@@ -29,15 +28,18 @@ export default function PostDetail({ post, error, initialTheme }) {
       })
   }, [currentThemeId, initialTheme])
 
-  if (router.isFallback || !HeroComponent) {
-    return <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Typography>Loading...</Typography>
-    </Box>
+    if (router.isFallback) {
+        return (
+            <PublicLayout>
+                <HeroSkeleton />
+            </PublicLayout>
+        )
   }
 
   if (error || !post) {
     return (
       <PublicLayout>
+            <SEO title="Post Not Found" />
         <Container maxWidth="md" sx={{ py: 8 }}>
           <Typography variant="h3" fontWeight={700} color="error" gutterBottom>
             Post not found
@@ -48,31 +50,60 @@ export default function PostDetail({ post, error, initialTheme }) {
     )
   }
 
+    const excerpt = post.content?.replace(/<[^>]*>/g, '').slice(0, 160) || '';
+
   return (
-    <PublicLayout disableContainer>
-      <HeroComponent
-        title={post.title}
-        subtitle={new Date(post.created_at).toLocaleDateString()}
-      />
-      <Container maxWidth="md" sx={{ py: 8 }}>
-        <Card elevation={4}>
-          <CardContent sx={{ p: { xs: 3, md: 5 } }}>
-            <Box sx={{
-              '& img': { maxWidth: '100%', borderRadius: 2 },
-              '& h1, & h2, & h3, & h4': { fontFamily: theme.fonts.heading, fontWeight: 700 },
-              '& p': { lineHeight: 1.7 }
-            }}
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
-            <Box sx={{ mt: 4 }}>
-              <Button component={NextLink} href="/" startIcon={<ArrowBackIcon />} variant="contained" color="primary">
-                Back to home
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      </Container>
-    </PublicLayout>
+      <>
+          <SEO
+              title={post.title}
+              description={excerpt}
+              article={true}
+              publishedTime={post.created_at}
+              modifiedTime={post.updated_at}
+              keywords={post.tags || []}
+          />
+          <SchemaOrg
+              type="Article"
+              data={{
+                  headline: post.title,
+                  datePublished: post.created_at,
+                  dateModified: post.updated_at,
+                  description: excerpt,
+                  author: {
+                      '@type': 'Organization',
+                      name: process.env.NEXT_PUBLIC_SITE_NAME || 'School CMS',
+                  },
+              }}
+          />
+          <PublicLayout disableContainer>
+              {!HeroComponent ? (
+                  <HeroSkeleton />
+              ) : (
+                      <HeroComponent
+                          title={post.title}
+                          subtitle={new Date(post.created_at).toLocaleDateString()}
+                      />
+              )}
+              <Container maxWidth="md" sx={{ py: 8 }}>
+                  <Card elevation={4}>
+                      <CardContent sx={{ p: { xs: 3, md: 5 } }}>
+                          <Box sx={{
+                              '& img': { maxWidth: '100%', borderRadius: 2 },
+                              '& h1, & h2, & h3, & h4': { fontFamily: theme.fonts.heading, fontWeight: 700 },
+                              '& p': { lineHeight: 1.7 }
+                          }}
+                              dangerouslySetInnerHTML={{ __html: post.content }}
+                          />
+                          <Box sx={{ mt: 4 }}>
+                              <Button component={NextLink} href="/" startIcon={<ArrowBackIcon />} variant="contained" color="primary">
+                                  Back to home
+                              </Button>
+                          </Box>
+                      </CardContent>
+                  </Card>
+              </Container>
+          </PublicLayout>
+      </>
   )
 }
 
