@@ -1,34 +1,137 @@
+import { Box, Container, Typography, Button } from '@mui/material';
+
 export default function Hero({ title, subtitle, ctaText, ctaLink, secondaryCtaText, secondaryCtaLink, image }) {
   return (
-    <header className="relative py-28 bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 text-white overflow-hidden">
-      <div className="absolute inset-0">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMSIvPjwvZz48L3N2Zz4=')] opacity-20"></div>
-      </div>
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="text-center max-w-5xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-extrabold mb-8 leading-tight drop-shadow-lg animate-fade-in">{title || 'Welcome to Our School'}</h1>
-          {subtitle && <p className="text-xl md:text-2xl text-purple-50 leading-relaxed drop-shadow mb-10 max-w-3xl mx-auto">{subtitle}</p>}
-          {(ctaText || secondaryCtaText) && (
-            <div className="flex flex-wrap gap-4 justify-center">
-              {ctaText && ctaLink && (
-                <a href={ctaLink} className="bg-white text-purple-600 font-bold px-10 py-4 rounded-full shadow-xl hover:bg-purple-50 hover:shadow-2xl transition-all transform hover:scale-105">
-                  {ctaText}
-                </a>
-              )}
-              {secondaryCtaText && secondaryCtaLink && (
-                <a href={secondaryCtaLink} className="bg-purple-700 text-white font-bold px-10 py-4 rounded-full shadow-xl hover:bg-purple-800 hover:shadow-2xl transition-all transform hover:scale-105">
-                  {secondaryCtaText}
-                </a>
-              )}
-            </div>
+    <Box
+      sx={{
+        background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 50%, #f97316 100%)',
+        color: 'white',
+        py: { xs: 14, md: 18 },
+        position: 'relative',
+        overflow: 'hidden'
+      }}
+    >
+      {/* Decorative pattern overlay */}
+      <Box
+        sx={{
+          position: 'absolute',
+          inset: 0,
+          backgroundImage: 'url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIuMSIvPjwvZz48L3N2Zz4=")',
+          opacity: 0.2
+        }}
+      />
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        <Box sx={{ textAlign: 'center', maxWidth: '900px', mx: 'auto' }}>
+          <Typography 
+            variant="h1" 
+            sx={{ 
+              fontSize: { xs: '2.8rem', sm: '4rem', md: '5rem' },
+              fontWeight: 900,
+              mb: 4,
+              textShadow: '0 4px 30px rgba(0,0,0,0.3)',
+              lineHeight: 1.1,
+              background: 'linear-gradient(to right, #fff 0%, rgba(255,255,255,0.9) 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text'
+            }}
+          >
+            {title || 'Welcome to Our School'}
+          </Typography>
+          {subtitle && (
+            <Typography 
+              variant="h5" 
+              sx={{ 
+                fontSize: { xs: '1.2rem', md: '1.6rem' },
+                mb: 6,
+                opacity: 0.95,
+                fontWeight: 400,
+                maxWidth: '700px',
+                mx: 'auto',
+                lineHeight: 1.6,
+                textShadow: '0 2px 10px rgba(0,0,0,0.2)'
+              }}
+            >
+              {subtitle}
+            </Typography>
           )}
+          <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', flexWrap: 'wrap', mb: image ? 6 : 0 }}>
+            {ctaText && ctaLink && (
+              <Button
+                href={ctaLink}
+                variant="contained"
+                size="large"
+                sx={{
+                  bgcolor: 'white',
+                  color: '#a855f7',
+                  px: 6,
+                  py: 2.5,
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  borderRadius: 50,
+                  textTransform: 'none',
+                  boxShadow: '0 10px 30px rgba(0,0,0,0.25)',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.95)',
+                    transform: 'translateY(-4px) scale(1.05)',
+                    boxShadow: '0 15px 40px rgba(0,0,0,0.3)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {ctaText}
+              </Button>
+            )}
+            {secondaryCtaText && secondaryCtaLink && (
+              <Button
+                href={secondaryCtaLink}
+                variant="outlined"
+                size="large"
+                sx={{
+                  borderColor: 'white',
+                  color: 'white',
+                  px: 6,
+                  py: 2.5,
+                  fontSize: '1.2rem',
+                  fontWeight: 700,
+                  borderRadius: 50,
+                  borderWidth: 2,
+                  textTransform: 'none',
+                  '&:hover': {
+                    borderWidth: 2,
+                    bgcolor: 'rgba(255,255,255,0.2)',
+                    transform: 'translateY(-4px) scale(1.05)',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
+                  },
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {secondaryCtaText}
+              </Button>
+            )}
+          </Box>
           {image && (
-            <div className="mt-12 flex justify-center">
-              <img src={image} alt="hero" className="w-full max-w-lg h-72 object-cover rounded-3xl shadow-2xl border-8 border-white/30 transform hover:scale-105 transition-transform duration-300" />
-            </div>
+            <Box
+              component="img"
+              src={image}
+              alt="hero"
+              sx={{
+                width: '100%',
+                maxWidth: 600,
+                height: 'auto',
+                mx: 'auto',
+                borderRadius: 6,
+                boxShadow: '0 25px 70px rgba(0,0,0,0.4)',
+                border: '8px solid rgba(255,255,255,0.3)',
+                transition: 'transform 0.3s ease',
+                '&:hover': {
+                  transform: 'scale(1.03)'
+                }
+              }}
+            />
           )}
-        </div>
-      </div>
-    </header>
+        </Box>
+      </Container>
+    </Box>
   );
 }

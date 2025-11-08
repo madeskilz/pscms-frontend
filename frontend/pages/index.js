@@ -98,8 +98,65 @@ export default function Home({ posts, initialTheme, homepage, hero, features }) 
                           />
                   ) : null}
 
-                  {/* Theme Features Section */}
-                  {hasFeatures && FeaturesComponent && <FeaturesComponent features={features} />}
+                  {/* Modern Features Section with Material-UI */}
+                  {features && features.length > 0 && (
+                      <Box sx={{ py: 10, bgcolor: 'grey.50' }}>
+                          <Container maxWidth="lg">
+                              <Box sx={{ textAlign: 'center', mb: 8 }}>
+                                  <Typography variant="h3" component="h2" fontWeight={700} color="primary" gutterBottom>
+                                      Why Choose Us
+                                  </Typography>
+                                  <Typography variant="h6" color="text.secondary" sx={{ maxWidth: '800px', mx: 'auto' }}>
+                                      Discover what makes our school the perfect place for your child's educational journey
+                                  </Typography>
+                              </Box>
+                              <Grid container spacing={4}>
+                                  {features.map((feature, index) => (
+                                      <Grid item xs={12} sm={6} md={4} key={index}>
+                                          <Card 
+                                              elevation={0}
+                                              sx={{ 
+                                                  height: '100%', 
+                                                  borderRadius: 3,
+                                                  border: '1px solid',
+                                                  borderColor: 'grey.200',
+                                                  transition: 'all 0.3s ease',
+                                                  '&:hover': {
+                                                      transform: 'translateY(-8px)',
+                                                      boxShadow: 8,
+                                                      borderColor: 'primary.main'
+                                                  }
+                                              }}
+                                          >
+                                              <CardContent sx={{ p: 4, textAlign: 'center' }}>
+                                                  <Box sx={{ 
+                                                      width: 80, 
+                                                      height: 80, 
+                                                      borderRadius: '50%',
+                                                      bgcolor: 'primary.light',
+                                                      display: 'flex',
+                                                      alignItems: 'center',
+                                                      justifyContent: 'center',
+                                                      mx: 'auto',
+                                                      mb: 3,
+                                                      fontSize: '2.5rem'
+                                                  }}>
+                                                      {feature.icon}
+                                                  </Box>
+                                                  <Typography variant="h5" component="h3" fontWeight={700} color="primary" gutterBottom>
+                                                      {feature.title}
+                                                  </Typography>
+                                                  <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+                                                      {feature.description}
+                                                  </Typography>
+                                              </CardContent>
+                                          </Card>
+                                      </Grid>
+                                  ))}
+                              </Grid>
+                          </Container>
+                      </Box>
+                  )}
 
                   <Container maxWidth="lg" sx={{ py: 8 }}>
                                             {/* Parent Quick Links Section */}
