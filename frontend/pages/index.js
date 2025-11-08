@@ -100,6 +100,44 @@ export default function Home({ posts, initialTheme, homepage }) {
                   {hasFeatures && FeaturesComponent && <FeaturesComponent />}
 
                   <Container maxWidth="lg" sx={{ py: 6 }}>
+                                            {/* Parent Quick Links Section */}
+                                            <Box sx={{ mb: 8 }}>
+                                                <Typography variant="h4" component="h2" gutterBottom fontWeight={700} color="text.primary">
+                                                    For Parents
+                                                </Typography>
+                                                <Grid container spacing={3}>
+                                                    <Grid item xs={12} md={4}>
+                                                        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+                                                            <CardActionArea component={NextLink} href="/posts/welcome-back">
+                                                                <CardContent>
+                                                                    <Typography variant="h6" fontWeight={700} color="primary">Admissions</Typography>
+                                                                    <Typography variant="body2" color="text.secondary">Enrollment steps and requirements.</Typography>
+                                                                </CardContent>
+                                                            </CardActionArea>
+                                                        </Card>
+                                                    </Grid>
+                                                    <Grid item xs={12} md={4}>
+                                                        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+                                                            <CardActionArea component={NextLink} href="/posts/sports-day-highlights">
+                                                                <CardContent>
+                                                                    <Typography variant="h6" fontWeight={700} color="primary">Calendar</Typography>
+                                                                    <Typography variant="body2" color="text.secondary">Key dates & upcoming events.</Typography>
+                                                                </CardContent>
+                                                            </CardActionArea>
+                                                        </Card>
+                                                    </Grid>
+                                                    <Grid item xs={12} md={4}>
+                                                        <Card elevation={2} sx={{ p: 2, borderRadius: 3 }}>
+                                                            <CardActionArea component={NextLink} href="/posts">
+                                                                <CardContent>
+                                                                    <Typography variant="h6" fontWeight={700} color="primary">PTA</Typography>
+                                                                    <Typography variant="body2" color="text.secondary">Parent-Teacher updates & news.</Typography>
+                                                                </CardContent>
+                                                            </CardActionArea>
+                                                        </Card>
+                                                    </Grid>
+                                                </Grid>
+                                            </Box>
                       {/* Featured Posts Section */}
                       {homepage?.featuredPostIds?.length > 0 && (
                           <Box sx={{

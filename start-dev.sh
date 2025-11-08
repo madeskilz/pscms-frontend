@@ -33,6 +33,22 @@ fi
 echo "✅ Using Node $NODE_VERSION"
 echo ""
 
+# Proactively free ports 3001 and 3000 to avoid EADDRINUSE
+echo "🧹 Checking ports..."
+if lsof -nP -iTCP:3001 -sTCP:LISTEN >/dev/null 2>&1; then
+    echo "   - Freeing port 3001"
+    lsof -nP -iTCP:3001 -sTCP:LISTEN -t | xargs -r kill -TERM 2>/dev/null || true
+    sleep 1
+    lsof -nP -iTCP:3001 -sTCP:LISTEN -t | xargs -r kill -KILL 2>/dev/null || true
+fi
+if lsof -nP -iTCP:3000 -sTCP:LISTEN >/dev/null 2>&1; then
+    echo "   - Freeing port 3000"
+    lsof -nP -iTCP:3000 -sTCP:LISTEN -t | xargs -r kill -TERM 2>/dev/null || true
+    sleep 1
+    lsof -nP -iTCP:3000 -sTCP:LISTEN -t | xargs -r kill -KILL 2>/dev/null || true
+fi
+echo ""
+
 # Check if data directory exists
 if [ ! -d "data" ]; then
     echo "📁 Creating data directory..."

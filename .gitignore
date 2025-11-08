@@ -3,6 +3,8 @@ node_modules/
 /data/
 /storage/uploads/
 /.next/
+frontend/.next/
+**/.next/
 dist/
 coverage/
 npm-debug.log*

@@ -1,1 +1,0 @@
-self.__REACT_LOADABLE_MANIFEST="{\"pages/[slug].js -> ../themes/classic/components/Hero\":{\"id\":\"pages/[slug].js -> ../themes/classic/components/Hero\",\"files\":[\"static/chunks/themes_classic_components_Hero_jsx.js\"]}}"
