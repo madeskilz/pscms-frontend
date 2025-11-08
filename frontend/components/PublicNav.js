@@ -1,4 +1,4 @@
-import React, { useState, memo, useMemo } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import NextLink from 'next/link'
 import { useTheme } from '../lib/ThemeContext'
 import AppBar from '@mui/material/AppBar'
@@ -15,7 +15,9 @@ import ListItemButton from '@mui/material/ListItemButton'
 import ListItemText from '@mui/material/ListItemText'
 import Divider from '@mui/material/Divider'
 
-const links = [
+import { getMenu } from '../lib/api'
+
+const defaultLinks = [
     { label: 'Home', href: '/' },
     { label: 'About', href: '/about' },
     { label: 'News & Posts', href: '/posts' },
@@ -25,19 +27,48 @@ const links = [
 // Memoized NavLink component
 const NavLink = memo(function NavLink({ link, theme }) {
     return (
-        <Button
-            component={NextLink}
-            href={link.href}
-            sx={{ color: theme.colors.text, fontWeight: 500 }}
-        >
+        link.external ? (
+            <Button component="a" href={link.href} target="_blank" rel="noopener noreferrer" sx={{ color: theme.colors.text, fontWeight: 500 }}>
             {link.label}
-        </Button>
+            </Button>
+        ) : (
+            <Button component={NextLink} href={link.href} sx={{ color: theme.colors.text, fontWeight: 500 }}>
+                {link.label}
+            </Button>
+        )
     );
 });
 
 export default function PublicNav() {
     const { theme } = useTheme()
     const [open, setOpen] = useState(false)
+    const [links, setLinks] = useState(defaultLinks)
+
+    useEffect(() => {
+        let mounted = true
+        getMenu('primary').then(menu => {
+            if (!mounted) return
+            if (Array.isArray(menu?.items) && menu.items.length) {
+                setLinks(menu.items)
+            }
+        }).catch(() => { })
+        return () => { mounted = false }
+    }, [])
+
+    // Listen for menu updates broadcast via localStorage from admin navigation page
+    useEffect(() => {
+        const handler = (e) => {
+            if (e.key === 'menuUpdated') {
+                getMenu('primary').then(menu => {
+                    if (Array.isArray(menu?.items) && menu.items.length) {
+                        setLinks(menu.items)
+                    }
+                }).catch(() => { })
+            }
+        }
+        window.addEventListener('storage', handler)
+        return () => window.removeEventListener('storage', handler)
+    }, [])
 
     const handleDrawerToggle = () => setOpen(!open)
     const handleDrawerClose = () => setOpen(false)

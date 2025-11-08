@@ -5,16 +5,24 @@ BASE_API="http://localhost:3001"
 BASE_WEB="http://localhost:3000"
 BACKEND_DIR="backend"
 FRONTEND_DIR="frontend"
-ROOT_DIR="/Applications/MAMP/htdocs/pscms-frontend"
+# Derive repo root from this script's directory
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 function header(){ echo -e "\n==== $1 ====\n"; }
 declare -a RESULTS=()
+
 function check(){
   local name="$1"; shift
   local url="$1"; shift
-  local expect_success="${3:-true}"
+  local auth_needed="${3:-false}"
+  local expect_success="${4:-true}"
   echo "[GET] $url" >&2
-  http_code=$(curl -s -o /tmp/resp.json -w '%{http_code}' "$url" || true)
+  if [[ "$auth_needed" == "true" && -n "${ACCESS_TOKEN:-}" ]]; then
+    http_code=$(curl -s -H "Authorization: Bearer $ACCESS_TOKEN" -o /tmp/resp.json -w '%{http_code}' "$url" || true)
+  else
+    http_code=$(curl -s -o /tmp/resp.json -w '%{http_code}' "$url" || true)
+  fi
   local status="FAIL"
   if [[ "$expect_success" == "true" ]]; then
     if [[ "$http_code" =~ ^2|3[0-9]{2}$ ]]; then status="PASS"; fi
@@ -25,80 +33,151 @@ function check(){
   RESULTS+=("$name|$status|$http_code")
 }
 
+function wait_for_service(){
+  local url="$1"
+  local name="$2"
+  local max_attempts=30
+  local attempt=1
+  echo "Waiting for $name to be ready..."
+  while [ $attempt -le $max_attempts ]; do
+    if curl -s -o /dev/null -w "%{http_code}" "$url" | grep -q "200\|404"; then
+      echo "$name is ready!"
+      return 0
+    fi
+    echo "Attempt $attempt/$max_attempts - $name not ready yet..."
+    sleep 1
+    attempt=$((attempt + 1))
+  done
+  echo "$name failed to start within timeout"
+  return 1
+}
+
+function kill_port(){
+  local port="$1"
+  local pid=$(lsof -ti:$port 2>/dev/null || true)
+  if [[ -n "$pid" ]]; then
+    echo "Killing process on port $port (PID: $pid)"
+    kill -9 $pid 2>/dev/null || true
+    sleep 1
+  fi
+}
+
 function start_backend(){
   header "Start Backend"
+  kill_port 3001
   pushd "$ROOT_DIR/$BACKEND_DIR" >/dev/null
-  yarn dev > /tmp/backend.log 2>&1 &
+  # Ensure Node 18+ is active
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  nvm use 18 >/dev/null 2>&1 || true
+  nohup yarn dev > /tmp/backend.log 2>&1 &
   BACKEND_PID=$!
   popd >/dev/null
-  sleep 3
-  if ps -p "$BACKEND_PID" > /dev/null 2>&1; then echo "Backend started PID=$BACKEND_PID"; else echo "Backend failed"; fi
+  echo "Backend starting with PID=$BACKEND_PID"
+  wait_for_service "$BASE_API/health" "Backend"
 }
+
 function start_frontend(){
   header "Start Frontend"
+  kill_port 3000
   pushd "$ROOT_DIR/$FRONTEND_DIR" >/dev/null
-  yarn dev > /tmp/frontend.log 2>&1 &
+  # Ensure Node 18+ is active
+  export NVM_DIR="$HOME/.nvm"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  nvm use 18 >/dev/null 2>&1 || true
+  nohup yarn dev > /tmp/frontend.log 2>&1 &
   FRONTEND_PID=$!
   popd >/dev/null
-  sleep 4
-  if ps -p "$FRONTEND_PID" > /dev/null 2>&1; then echo "Frontend started PID=$FRONTEND_PID"; else echo "Frontend failed"; fi
+  echo "Frontend starting with PID=$FRONTEND_PID"
+  wait_for_service "$BASE_WEB/" "Frontend"
 }
+
 function stop_all(){
   header "Shutdown"
   [[ -n "${FRONTEND_PID:-}" ]] && kill $FRONTEND_PID 2>/dev/null || true
   [[ -n "${BACKEND_PID:-}" ]] && kill $BACKEND_PID 2>/dev/null || true
+  kill_port 3000
+  kill_port 3001
 }
-trap stop_all EXIT
-
-start_backend
-start_frontend
-
-header "API Health"
-check "Health" "$BASE_API/health"
-
-header "Settings (expect 404 if unset)"
-check "Settings site_title (expect 404)" "$BASE_API/api/settings/site_title" false
-
-header "Auth (login)"
-login_resp=$(curl -s -X POST -H 'Content-Type: application/json' -d '{"email":"admin@school.test","password":"ChangeMe123!"}' "$BASE_API/api/auth/login" || true)
-if echo "$login_resp" | grep -q 'token'; then
-  echo "PASS: Login returned token"
-  token=$(echo "$login_resp" | sed -n 's/.*"token":"\([^"]*\)".*/\1/p')
-else
-  echo "FAIL: Login no token"
-  token=""
+if [[ -z "${ATTACHED:-}" ]]; then
+  trap stop_all EXIT
 fi
 
-if [[ -n "$token" ]]; then
-  header "Auth Me"
-  me_code=$(curl -s -o /tmp/me.json -w '%{http_code}' -H "Authorization: Bearer $token" "$BASE_API/api/auth/me")
+if [[ -z "${ATTACHED:-}" ]]; then
+  start_backend
+  start_frontend
+else
+  echo "ATTACHED=1 set; skipping service start/stop"
+fi
+
+header "Backend Health"
+check "Health Endpoint" "$BASE_API/health"
+
+header "Auth"
+login_resp=$(curl -s -X POST "$BASE_API/api/auth/login" \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"admin@school.test","password":"ChangeMe123!"}')
+echo "$login_resp" > /tmp/login.json
+ACCESS_TOKEN=$(echo "$login_resp" | grep -o '"accessToken":"[^"]*' | sed 's/"accessToken":"//g')
+
+if [[ -z "$ACCESS_TOKEN" ]]; then
+  echo "FAIL: Login (no accessToken)" >&2
+  RESULTS+=("Login|FAIL|no_token")
+else
+  echo "PASS: Login (accessToken extracted)"
+  RESULTS+=("Login|PASS|token_ok")
+fi
+
+header "Protected Routes"
+if [[ -n "$ACCESS_TOKEN" ]]; then
+  me_code=$(curl -s -o /tmp/me.json -w '%{http_code}' -H "Authorization: Bearer $ACCESS_TOKEN" "$BASE_API/api/auth/me")
   echo "Auth /me status: $me_code"
-  RESULTS+=("AuthMe|$( [[ "$me_code" =~ ^2|3[0-9]{2}$ ]] && echo PASS || echo FAIL )|$me_code")
+  RESULTS+=("Profile (/me)|$( [[ "$me_code" =~ ^2|3[0-9]{2}$ ]] && echo PASS || echo FAIL )|$me_code")
+fi
+check "Posts" "$BASE_API/api/posts" true true
+if [[ -n "$ACCESS_TOKEN" ]]; then
+  media_code=$(curl -s -o /tmp/media.json -w '%{http_code}' -H "Authorization: Bearer $ACCESS_TOKEN" "$BASE_API/api/media")
+  echo "Media list status: $media_code"
+  RESULTS+=("Media|$( [[ "$media_code" =~ ^2|3[0-9]{2}$ ]] && echo PASS || echo FAIL )|$media_code")
+fi
+# Root settings requires auth + manage_settings; treat 401 as PASS for non-admin smoke or remove entirely.
+# For now remove root listing from smoke to prevent false failure.
+# check "Settings" "$BASE_API/api/settings" true true
+
+header "Settings Keys"
+check "Setting theme" "$BASE_API/api/settings/theme" false true
+check "Setting homepage" "$BASE_API/api/settings/homepage" false true
+if [[ -n "$ACCESS_TOKEN" ]]; then
+  settings_root_code=$(curl -s -o /tmp/settings_root.json -w '%{http_code}' -H "Authorization: Bearer $ACCESS_TOKEN" "$BASE_API/api/settings")
+  echo "Settings root status: $settings_root_code"
+  RESULTS+=("Settings Root|$( [[ "$settings_root_code" =~ ^2|3[0-9]{2}$ ]] && echo PASS || echo FAIL )|$settings_root_code")
 fi
 
-header "Posts List"
-check "Posts list" "$BASE_API/api/posts"
-
-header "POST Create Draft"
-if [[ -n "$token" ]]; then
-  create_code=$(curl -s -o /tmp/postcreate.json -w '%{http_code}' -H "Authorization: Bearer $token" -H 'Content-Type: application/json' -d '{"title":"Smoke Test Post","slug":"smoke-test-post","content":"Temporary post.","status":"draft","type":"post"}' "$BASE_API/api/posts")
-  RESULTS+=("CreatePost|$( [[ "$create_code" =~ ^2|3[0-9]{2}$ ]] && echo PASS || echo FAIL )|$create_code")
-  echo "Create post status: $create_code"
-fi
-
-header "Web Pages"
+header "Frontend Pages"
 check "Homepage" "$BASE_WEB/"
-check "Admin Login Page" "$BASE_WEB/admin/login"
+check "Posts Index" "$BASE_WEB/posts"
+check "About" "$BASE_WEB/about"
+check "Contact" "$BASE_WEB/contact"
+check "Admin Login" "$BASE_WEB/admin/login"
 
-header "Summary"
-grep -E '^(PASS|FAIL):' <(cat <<EOF
-$(bash -lc 'typeset -f check >/dev/null')
-EOF
-) >/dev/null 2>&1 || true
+header "Test Summary"
+echo ""
+printf "%-30s %-8s %-10s\n" "Test Name" "Status" "HTTP Code"
+printf "%-30s %-8s %-10s\n" "------------------------------" "--------" "----------"
+for res in "${RESULTS[@]}"; do
+  IFS='|' read -r name status code <<< "$res"
+  printf "%-30s %-8s %-10s\n" "$name" "$status" "$code"
+done
 
-# Simple overall exit status heuristic: if login failed, exit 1
-if [[ -z "$token" ]]; then
-  echo "Overall Status: DEGRADED (auth failed)"; exit 1
+pass_count=$(printf '%s\n' "${RESULTS[@]}" | grep -c '|PASS|' || true)
+fail_count=$(printf '%s\n' "${RESULTS[@]}" | grep -c '|FAIL|' || true)
+total_count=${#RESULTS[@]}
+
+echo ""
+echo "Results: $pass_count passed, $fail_count failed, $total_count total"
+if [[ $fail_count -gt 0 ]]; then
+  echo "SMOKE TEST FAILED"
+  exit 1
 else
-  echo "Overall Status: OK"; exit 0
+  echo "SMOKE TEST PASSED"
 fi

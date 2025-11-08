@@ -38,7 +38,7 @@ const PostCard = memo(function PostCard({ post }) {
     );
 });
 
-export default function Home({ posts, initialTheme }) {
+export default function Home({ posts, initialTheme, homepage }) {
   const { theme, currentThemeId } = useTheme()
   const [HeroComponent, setHeroComponent] = useState(null)
     const [FeaturesComponent, setFeaturesComponent] = useState(null)
@@ -89,8 +89,10 @@ export default function Home({ posts, initialTheme }) {
                       <HeroSkeleton />
                   ) : HeroComponent ? (
                           <HeroComponent
-                              title="Welcome to School CMS"
-                              subtitle="Empowering education through technology"
+                              title={homepage?.heroTitle || 'Welcome to School CMS'}
+                              subtitle={homepage?.heroSubtitle || 'Empowering education through technology'}
+                              ctaText={homepage?.ctaText}
+                              ctaHref={homepage?.ctaHref}
                           />
                   ) : null}
 
@@ -98,8 +100,49 @@ export default function Home({ posts, initialTheme }) {
                   {hasFeatures && FeaturesComponent && <FeaturesComponent />}
 
                   <Container maxWidth="lg" sx={{ py: 6 }}>
+                      {/* Featured Posts Section */}
+                      {homepage?.featuredPostIds?.length > 0 && (
+                          <Box sx={{
+                              mb: 8,
+                              p: 4,
+                              borderRadius: 3,
+                              background: `linear-gradient(135deg, ${theme.colors.primary} 0%, ${theme.colors.secondary} 60%)`,
+                              color: '#fff',
+                              boxShadow: 4
+                          }}>
+                              <Typography variant="h4" component="h2" gutterBottom fontWeight={700} sx={{ color: '#fff' }}>
+                                  Featured Posts
+                              </Typography>
+                              <Grid container spacing={3} sx={{ mt: 1 }}>
+                                  {posts
+                                      .filter(p => homepage.featuredPostIds.includes(p.id))
+                                      .map(post => (
+                                          <Grid item xs={12} sm={6} md={4} key={post.id}>
+                                              <Card elevation={6} sx={{ height: '100%', display: 'flex', flexDirection: 'column', bgcolor: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.2)' }}>
+                                                  <CardActionArea component={NextLink} href={`/posts/${post.slug}`} sx={{ flexGrow: 1 }}>
+                                                      <CardContent>
+                                                          <Typography variant="h6" component="h3" gutterBottom fontWeight={700} sx={{ color: '#fff' }}>
+                                                              {post.title}
+                                                          </Typography>
+                                                          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', mb: 2, display: 'block' }}>
+                                                              {new Date(post.created_at).toLocaleDateString()}
+                                                          </Typography>
+                                                          {post.content && (
+                                                              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical' }}>
+                                                                  {post.content.replace(/<[^>]*>/g, '').slice(0, 140) + '...'}
+                                                              </Typography>
+                                                          )}
+                                                      </CardContent>
+                                                  </CardActionArea>
+                                              </Card>
+                                          </Grid>
+                                      ))}
+                              </Grid>
+                          </Box>
+                      )}
+
                       <Typography variant="h3" component="h2" gutterBottom fontWeight={700} color="text.primary">
-                          Latest Posts
+                          {homepage?.postsSectionTitle || 'Latest Posts'}
                       </Typography>
                       {posts.length === 0 && (
                           <Typography variant="h6" color="text.secondary" sx={{ mt: 4 }}>
@@ -109,9 +152,9 @@ export default function Home({ posts, initialTheme }) {
                       <Grid container spacing={4} sx={{ mt: 2 }}>
                           {posts.map((post) => (
                               <Grid item xs={12} sm={6} md={4} key={post.id}>
-                      <PostCard post={post} />
-                  </Grid>
-              ))}
+                                  <PostCard post={post} />
+                              </Grid>
+                          ))}
                       </Grid>
                   </Container>
               </Box>
@@ -123,19 +166,21 @@ export default function Home({ posts, initialTheme }) {
 
 export async function getServerSideProps() {
   try {
-    const [postsData, themeData] = await Promise.all([
-      getPosts(null, 1, 'post'),
-      getSetting('theme')
-    ])
+      const [postsData, themeData, homepageSetting] = await Promise.all([
+          getPosts(null, 1, 'post'),
+          getSetting('theme'),
+          getSetting('homepage')
+      ])
     const published = (postsData.data || []).filter(p => p.status === 'published')
     return { 
       props: { 
-        posts: published,
-        initialTheme: themeData?.active || 'classic'
+            posts: published,
+            initialTheme: themeData?.active || 'classic',
+            homepage: homepageSetting || null
       } 
     }
   } catch (error) {
     console.error('Failed to fetch data for homepage:', error)
-    return { props: { posts: [], initialTheme: 'classic' } }
+      return { props: { posts: [], initialTheme: 'classic', homepage: null } }
   }
 }

@@ -4,6 +4,16 @@ const knex = require('knex')(require('../../knexfile')[process.env.NODE_ENV || '
 const requireAuth = require('../middlewares/auth');
 const { requireCapability } = require('../middlewares/rbac');
 
+// GET /api/settings - list all settings (admin only)
+router.get('/', requireAuth, requireCapability('manage_settings'), async (req, res) => {
+    const rows = await knex('settings').select('key', 'value');
+    const out = {};
+    for (const r of rows) {
+        try { out[r.key] = JSON.parse(r.value); } catch { out[r.key] = r.value; }
+    }
+    return res.json({ settings: out });
+});
+
 // GET /api/settings/:key
 router.get('/:key', async (req, res) => {
   const { key } = req.params;

@@ -215,3 +215,45 @@ export async function updateSetting(key, value, accessToken) {
     clearCache(`/api/settings/${key}`);
   return res.json();
 }
+
+export async function getMenu(name = 'primary') {
+    try {
+        return cachedFetch(`${API_BASE}/api/menus/${name}`);
+    } catch (e) {
+        return { name, items: [] };
+    }
+}
+
+export async function updateMenu(name, items, accessToken) {
+    const res = await fetchWithRetry(`${API_BASE}/api/menus/${name}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({ items })
+    });
+    if (!res.ok) {
+        const error = new Error('Failed to update menu');
+        error.status = res.status;
+        throw error;
+    }
+    clearCache(`/api/menus/${name}`);
+    return res.json();
+}
+
+export async function getAnalyticsSummary(accessToken) {
+    return cachedFetch(`${API_BASE}/api/analytics/summary`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+    });
+}
+
+export function logoutClient(router) {
+    try {
+        if (typeof window !== 'undefined') {
+            sessionStorage.removeItem('accessToken');
+            sessionStorage.removeItem('refreshToken');
+        }
+    } catch { }
+    if (router) router.push('/admin/login');
+}

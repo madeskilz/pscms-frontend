@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/router'
-import { updateSetting } from '../../lib/api'
+import { updateSetting, getSetting, getPosts } from '../../lib/api'
 import { themes } from '../../lib/themes'
 import { useTheme } from '../../lib/ThemeContext'
 import NextLink from 'next/link'
@@ -14,14 +14,42 @@ import Box from '@mui/material/Box'
 import Button from '@mui/material/Button'
 import Alert from '@mui/material/Alert'
 import Chip from '@mui/material/Chip'
+import TextField from '@mui/material/TextField'
+import IconButton from '@mui/material/IconButton'
+import Stack from '@mui/material/Stack'
+import Accordion from '@mui/material/Accordion'
+import AccordionSummary from '@mui/material/AccordionSummary'
+import AccordionDetails from '@mui/material/AccordionDetails'
+import FormControl from '@mui/material/FormControl'
+import InputLabel from '@mui/material/InputLabel'
+import Select from '@mui/material/Select'
+import MenuItem from '@mui/material/MenuItem'
+import Checkbox from '@mui/material/Checkbox'
+import ListItemText from '@mui/material/ListItemText'
 import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 import PaletteIcon from '@mui/icons-material/Palette'
+import HomeIcon from '@mui/icons-material/Home'
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import DeleteIcon from '@mui/icons-material/Delete'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline'
+import StarIcon from '@mui/icons-material/Star'
 import AdminLayout from '../../components/AdminLayout'
 
 export default function AdminSettings() {
   const [accessToken, setAccessToken] = useState(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+    const [homepage, setHomepage] = useState({
+        heroTitle: '',
+        heroSubtitle: '',
+        ctaText: '',
+        ctaHref: '',
+        postsSectionTitle: 'Latest Posts',
+        features: []
+    })
+    const [featuredPosts, setFeaturedPosts] = useState([])
+    const [allPosts, setAllPosts] = useState([])
+    const [loading, setLoading] = useState(true)
   const router = useRouter()
   const { currentThemeId, setCurrentThemeId } = useTheme()
 
@@ -32,7 +60,26 @@ export default function AdminSettings() {
       return
     }
     setAccessToken(token)
+      loadSettings(token)
   }, [router])
+
+    const loadSettings = async (token) => {
+        try {
+            const [homepageData, postsData] = await Promise.all([
+                getSetting('homepage'),
+                getPosts(token, 1, 'post')
+            ])
+            if (homepageData) {
+                setHomepage(prev => ({ ...prev, ...homepageData }))
+                setFeaturedPosts(homepageData.featuredPostIds || [])
+            }
+            setAllPosts(postsData?.data || [])
+        } catch (err) {
+            console.error('Failed to load settings:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
 
   const handleThemeChange = async (themeId) => {
     setSaving(true)
@@ -48,6 +95,45 @@ export default function AdminSettings() {
       setSaving(false)
     }
   }
+
+    const handleHomepageUpdate = async () => {
+        setSaving(true)
+        setMessage('')
+        try {
+            await updateSetting('homepage', { ...homepage, featuredPostIds: featuredPosts }, accessToken)
+            setMessage('Homepage settings updated successfully!')
+            setTimeout(() => setMessage(''), 3000)
+        } catch (err) {
+            setMessage('Failed to update homepage settings')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const addFeature = () => {
+        setHomepage(prev => ({
+            ...prev,
+            features: [...prev.features, { title: 'New Feature', text: 'Description here' }]
+        }))
+    }
+
+    const updateFeature = (index, key, value) => {
+        setHomepage(prev => ({
+            ...prev,
+            features: prev.features.map((f, i) => i === index ? { ...f, [key]: value } : f)
+        }))
+    }
+
+    const removeFeature = (index) => {
+        setHomepage(prev => ({
+            ...prev,
+            features: prev.features.filter((_, i) => i !== index)
+        }))
+    }
+
+    const handleFeaturedPostsChange = (event) => {
+        setFeaturedPosts(event.target.value)
+    }
 
   if (!accessToken) return <Box sx={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Typography>Loading...</Typography></Box>
 
@@ -142,6 +228,147 @@ export default function AdminSettings() {
             </Grid>
           </CardContent>
         </Card>
+
+              <Card elevation={3} sx={{ mb: 4 }}>
+                  <CardContent>
+                      <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                          <HomeIcon color="primary" />
+                          Homepage Content
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" paragraph>
+                          Customize your homepage hero, features, and featured posts
+                      </Typography>
+
+                      <Accordion defaultExpanded>
+                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                              <Typography variant="h6">Hero Section</Typography>
+                          </AccordionSummary>
+                          <AccordionDetails>
+                              <Stack spacing={2}>
+                                  <TextField
+                                      label="Hero Title"
+                                      value={homepage.heroTitle}
+                                      onChange={(e) => setHomepage(prev => ({ ...prev, heroTitle: e.target.value }))}
+                                      fullWidth
+                                  />
+                                  <TextField
+                                      label="Hero Subtitle"
+                                      value={homepage.heroSubtitle}
+                                      onChange={(e) => setHomepage(prev => ({ ...prev, heroSubtitle: e.target.value }))}
+                                      fullWidth
+                                      multiline
+                                      rows={2}
+                                  />
+                                  <TextField
+                                      label="CTA Button Text"
+                                      value={homepage.ctaText}
+                                      onChange={(e) => setHomepage(prev => ({ ...prev, ctaText: e.target.value }))}
+                                      fullWidth
+                                  />
+                                  <TextField
+                                      label="CTA Button Link"
+                                      value={homepage.ctaHref}
+                                      onChange={(e) => setHomepage(prev => ({ ...prev, ctaHref: e.target.value }))}
+                                      fullWidth
+                                      placeholder="/about"
+                                  />
+                                  <TextField
+                                      label="Posts Section Title"
+                                      value={homepage.postsSectionTitle}
+                                      onChange={(e) => setHomepage(prev => ({ ...prev, postsSectionTitle: e.target.value }))}
+                                      fullWidth
+                                  />
+                              </Stack>
+                          </AccordionDetails>
+                      </Accordion>
+
+                      <Accordion>
+                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                              <Typography variant="h6">Features (Optional)</Typography>
+                          </AccordionSummary>
+                          <AccordionDetails>
+                              <Stack spacing={2}>
+                                  {homepage.features?.map((feature, idx) => (
+                                      <Box key={idx} sx={{ p: 2, border: '1px solid', borderColor: 'divider', borderRadius: 1 }}>
+                                          <Stack spacing={2}>
+                                              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                                                  <TextField
+                                                      label="Feature Title"
+                                                      value={feature.title}
+                                                      onChange={(e) => updateFeature(idx, 'title', e.target.value)}
+                                                      size="small"
+                                                      sx={{ flex: 1 }}
+                                                  />
+                                                  <IconButton color="error" onClick={() => removeFeature(idx)}>
+                                                      <DeleteIcon />
+                                                  </IconButton>
+                                              </Box>
+                                              <TextField
+                                                  label="Feature Description"
+                                                  value={feature.text}
+                                                  onChange={(e) => updateFeature(idx, 'text', e.target.value)}
+                                                  multiline
+                                                  rows={2}
+                                                  size="small"
+                                                  fullWidth
+                                              />
+                                          </Stack>
+                                      </Box>
+                                  ))}
+                                  <Button
+                                      startIcon={<AddCircleOutlineIcon />}
+                                      variant="outlined"
+                                      onClick={addFeature}
+                                  >
+                                      Add Feature
+                                  </Button>
+                              </Stack>
+                          </AccordionDetails>
+                      </Accordion>
+
+                      <Accordion>
+                          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                  <StarIcon color="warning" />
+                                  Featured Posts
+                              </Typography>
+                          </AccordionSummary>
+                          <AccordionDetails>
+                              <FormControl fullWidth>
+                                  <InputLabel>Select Featured Posts</InputLabel>
+                                  <Select
+                                      multiple
+                                      value={featuredPosts}
+                                      onChange={handleFeaturedPostsChange}
+                                      renderValue={(selected) =>
+                                          `${selected.length} post${selected.length !== 1 ? 's' : ''} selected`
+                                      }
+                                  >
+                                      {allPosts.filter(p => p.status === 'published').map((post) => (
+                                          <MenuItem key={post.id} value={post.id}>
+                                              <Checkbox checked={featuredPosts.indexOf(post.id) > -1} />
+                                              <ListItemText primary={post.title} />
+                                          </MenuItem>
+                                      ))}
+                                  </Select>
+                              </FormControl>
+                              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                  Featured posts can be displayed prominently on your homepage
+                              </Typography>
+                          </AccordionDetails>
+                      </Accordion>
+
+                      <Box sx={{ mt: 3 }}>
+                          <Button
+                              variant="contained"
+                              onClick={handleHomepageUpdate}
+                              disabled={saving}
+                          >
+                              {saving ? 'Saving...' : 'Save Homepage Settings'}
+                          </Button>
+                      </Box>
+                  </CardContent>
+              </Card>
 
         <Card elevation={3}>
           <CardContent>
