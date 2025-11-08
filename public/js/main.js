@@ -31,24 +31,20 @@
     UI.render();
 
     console.log('[APP] Application ready');
+    console.log('[APP] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[APP] 🗄️  FILE-ONLY MODE: No localStorage used');
+    console.log('[APP] ⚠️  All changes exist in memory until exported');
+    console.log('[APP] 💾 Use Admin → Export Database to save your work');
+    console.log('[APP] 📁 Place cms.db in /dist/db/ to persist data');
+    console.log('[APP] ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     
-    // Show helpful notification if database was just created
-    const isNewDatabase = !localStorage.getItem('cms_database_initialized');
-    if (isNewDatabase) {
-      localStorage.setItem('cms_database_initialized', 'true');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📥 IMPORTANT: cms.db file has been auto-downloaded!');
-      console.log('');
-      console.log('To enable auto-loading on next visit:');
-      console.log('1. Find cms.db in your Downloads folder');
-      console.log('2. Move it to: /build/data/cms.db');
-      console.log('3. Refresh the page');
-      console.log('');
-      console.log('The app will then load from file instead of localStorage');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      
-      // Show visual notification
+    // Check if database file exists
+    const hasDbFile = await checkDatabaseFileExists();
+    if (!hasDbFile) {
+      // Show visual notification for file-only mode
       showDatabaseSetupNotification();
+    } else {
+      console.log('[APP] ✓ Database loaded from file successfully');
     }
   } catch (error) {
     console.error('[APP] Failed to start:', error);
@@ -63,6 +59,20 @@
 })();
 
 /**
+ * Check if database file exists
+ */
+async function checkDatabaseFileExists() {
+  const paths = ['db/cms.db', 'db/sqlite.db', 'db/app.sqlite'];
+  for (const path of paths) {
+    try {
+      const response = await fetch(path, { method: 'HEAD' });
+      if (response.ok) return true;
+    } catch (e) {}
+  }
+  return false;
+}
+
+/**
  * Show notification about database file setup
  */
 function showDatabaseSetupNotification() {
@@ -70,26 +80,27 @@ function showDatabaseSetupNotification() {
   notification.className = 'db-notification';
   notification.innerHTML = `
     <button class="close-btn" onclick="this.parentElement.remove()">×</button>
-    <h4>📥 Database File Downloaded</h4>
-    <p><strong>cms.db</strong> has been saved to your Downloads folder.</p>
-    <p>To enable auto-loading:</p>
+    <h4>🗄️ File-Only Mode</h4>
+    <p><strong>cms.db</strong> has been downloaded to your Downloads folder.</p>
+    <p><strong>⚠️ IMPORTANT:</strong> No localStorage - all data is file-based!</p>
     <ol>
-      <li>Move <code>cms.db</code> to <code>/build/data/</code></li>
+      <li>Move <code>cms.db</code> to <code>/dist/db/</code></li>
       <li>Refresh this page</li>
+      <li>Export database after making changes</li>
     </ol>
-    <p style="font-size:0.85rem;margin-top:10px;opacity:0.9;">
-      💡 The app will then load from the file instead of browser storage.
+    <p style="font-size:0.85rem;margin-top:10px;opacity:0.9;background:rgba(255,255,255,0.1);padding:8px;border-radius:4px;">
+      💡 Your changes exist only in memory until you export and replace the file in /dist/db/
     </p>
     <button onclick="this.parentElement.remove()">Got it!</button>
   `;
   
   document.body.appendChild(notification);
   
-  // Auto-dismiss after 30 seconds
+  // Auto-dismiss after 45 seconds (longer for file-only warning)
   setTimeout(() => {
     if (notification.parentElement) {
       notification.style.animation = 'slideOut 0.3s ease-in';
       setTimeout(() => notification.remove(), 300);
     }
-  }, 30000);
+  }, 45000);
 }

@@ -23,15 +23,13 @@ class Database {
       locateFile: file => `https://sql.js.org/dist/${file}`
     });
 
-    // Try to load database from multiple sources in order:
-    // 1. From filesystem (data/cms.db or data/sqlite.db)
-    // 2. From localStorage
-    // 3. Create new database
+    // Load database ONLY from file system - no localStorage
+    // Priority: File system → Create new (with auto-download)
     
     let dbLoaded = false;
     
-    // Try loading from filesystem first
-    const dbPaths = ['data/cms.db', 'data/sqlite.db', 'data/app.sqlite'];
+    // Try loading from filesystem
+    const dbPaths = ['db/cms.db', 'db/sqlite.db', 'db/app.sqlite'];
     for (const path of dbPaths) {
       try {
         console.log(`[DB] Attempting to load from ${path}...`);
@@ -41,6 +39,7 @@ class Database {
           const uint8Array = new Uint8Array(arrayBuffer);
           this.db = new this.SQL.Database(uint8Array);
           console.log(`[DB] Database loaded from ${path}`);
+          console.log('[DB] ✓ File-based mode - no localStorage used');
           dbLoaded = true;
           break;
         }
@@ -49,29 +48,18 @@ class Database {
       }
     }
     
-    // If not loaded from file, try localStorage
+    // If not loaded from file, create new database
     if (!dbLoaded) {
-      const savedDb = localStorage.getItem('cms_database');
-      
-      if (savedDb) {
-        console.log('[DB] Loading existing database from localStorage');
-        const uint8Array = this._base64ToUint8Array(savedDb);
-        this.db = new this.SQL.Database(uint8Array);
-        dbLoaded = true;
-      }
-    }
-    
-    // If still not loaded, create new database
-    if (!dbLoaded) {
-      console.log('[DB] Creating new database');
+      console.log('[DB] No database file found - creating new database');
+      console.log('[DB] ⚠️  Database will exist in memory only until downloaded');
       this.db = new this.SQL.Database();
       await this.createSchema();
       await this.seedInitialData();
       this.save();
       
-      // Auto-download the database file for user to place in /data/ folder
+      // Auto-download the database file for user to place in /db/ folder
       console.log('[DB] Auto-downloading cms.db file...');
-      console.log('[DB] Please move the downloaded file to /build/data/ folder');
+      console.log('[DB] ⚠️  IMPORTANT: Move this file to /dist/db/ to persist your data');
       setTimeout(() => {
         const data = this.db.export();
         this._saveToFile(data, 'cms.db');
@@ -341,16 +329,16 @@ class Database {
   }
 
   /**
-   * Save database to localStorage and optionally to file
+   * Save database to file only (no localStorage)
    */
   save(downloadAsFile = false) {
-    const data = this.db.export();
-    const base64 = this._uint8ArrayToBase64(data);
-    localStorage.setItem('cms_database', base64);
-    console.log('[DB] Database saved to localStorage');
+    // Database exists only in memory during session
+    // No localStorage persistence for admin data
+    console.log('[DB] Database updated in memory');
     
-    // Also save to file if requested or if this is initial creation
+    // Save to file if requested
     if (downloadAsFile) {
+      const data = this.db.export();
       this._saveToFile(data, 'cms.db');
     }
   }
@@ -385,48 +373,30 @@ class Database {
   }
 
   /**
-   * Import database from file
+   * Import database from file (loads into memory only)
    */
   async import(file) {
     const arrayBuffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
     this.db = new this.SQL.Database(uint8Array);
-    this.save();
-    console.log('[DB] Database imported');
+    console.log('[DB] Database imported into memory');
+    console.log('[DB] ⚠️  Changes will be lost on refresh - save to file to persist');
   }
 
   /**
-   * Reset database (clear localStorage and recreate)
+   * Reset database (recreate in memory)
    */
   async reset() {
-    localStorage.removeItem('cms_database');
     this.db.close();
     this.db = new this.SQL.Database();
     await this.createSchema();
     await this.seedInitialData();
     this.save();
-    console.log('[DB] Database reset');
+    console.log('[DB] Database reset in memory');
+    console.log('[DB] ⚠️  Export to file to persist this reset');
   }
 
   // Helper methods
-  _uint8ArrayToBase64(uint8Array) {
-    let binary = '';
-    const len = uint8Array.byteLength;
-    for (let i = 0; i < len; i++) {
-      binary += String.fromCharCode(uint8Array[i]);
-    }
-    return btoa(binary);
-  }
-
-  _base64ToUint8Array(base64) {
-    const binary = atob(base64);
-    const len = binary.length;
-    const uint8Array = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-      uint8Array[i] = binary.charCodeAt(i);
-    }
-    return uint8Array;
-  }
 
   async _simpleHash(password) {
     // Simple hash for demo - NOT SECURE for production

@@ -6,28 +6,18 @@
 const UI = {
   currentView: 'public',
   currentUser: null,
+  sessionToken: null, // In-memory only - no localStorage
 
   /**
    * Initialize UI
    */
   init() {
-    this.checkAuth();
+    // Session exists only in memory during page session
+    // No localStorage used for admin authentication
+    this.currentUser = null;
+    this.sessionToken = null;
     this.setupEventListeners();
     this.render();
-  },
-
-  /**
-   * Check authentication status
-   */
-  checkAuth() {
-    const session = localStorage.getItem('cms_session');
-    if (session) {
-      try {
-        this.currentUser = JSON.parse(session);
-      } catch (e) {
-        localStorage.removeItem('cms_session');
-      }
-    }
   },
 
   /**
@@ -180,6 +170,9 @@ const UI = {
     return `
       <div class="dashboard">
         <h1>Dashboard</h1>
+        <div style="background:#f39c12;color:white;padding:12px 20px;border-radius:6px;margin-bottom:20px;">
+          <strong>⚠️ FILE-ONLY MODE:</strong> Changes exist in memory only. Export database regularly to save your work!
+        </div>
         <div class="dashboard-stats">
           <div class="stat-card">
             <h3>${posts[0]?.count || 0}</h3>
@@ -622,8 +615,11 @@ const UI = {
             role: role?.name,
             capabilities: role ? JSON.parse(role.capabilities || '[]') : []
           };
-          localStorage.setItem('cms_session', JSON.stringify(session));
+          // Store in memory only - no localStorage
           this.currentUser = session;
+          this.sessionToken = crypto.randomUUID();
+          console.log('[AUTH] ✓ Logged in - session exists in memory only');
+          console.log('[AUTH] ⚠️  You will be logged out on page refresh');
           this.navigate('/admin');
         } else {
           alert('Invalid password');
@@ -649,13 +645,13 @@ const UI = {
           'UPDATE posts SET title = ?, slug = ?, content = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
           [data.title, data.slug, data.content, data.status, id]
         );
-        alert('Post updated');
+        alert('Post updated!\n\n⚠️ Remember to export database to save changes to file.');
       } else {
         db.exec(
           'INSERT INTO posts (type, title, slug, content, status, author_id) VALUES (?, ?, ?, ?, ?, ?)',
           [data.type, data.title, data.slug, data.content, data.status, data.author_id]
         );
-        alert('Post created');
+        alert('Post created!\n\n⚠️ Remember to export database to save changes to file.');
       }
 
       this.navigate(`/admin/${data.type}s`);
@@ -675,7 +671,7 @@ const UI = {
         [JSON.stringify({ active: theme }), 'theme']
       );
 
-      alert('Settings saved');
+      alert('Settings saved!\n\n⚠️ Remember to export database to persist changes.');
       this.render();
     }
   },
@@ -685,8 +681,9 @@ const UI = {
    */
   async handleAction(action, element) {
     if (action === 'logout') {
-      localStorage.removeItem('cms_session');
       this.currentUser = null;
+      this.sessionToken = null;
+      console.log('[AUTH] Logged out');
       this.navigate('/');
     }
 
