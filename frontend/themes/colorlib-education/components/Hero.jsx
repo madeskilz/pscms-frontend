@@ -1,6 +1,6 @@
 import { useTheme } from '../../../lib/ThemeContext';
 
-export default function Hero() {
+export default function Hero({ title, subtitle, ctaText, ctaLink, secondaryCtaText, secondaryCtaLink }) {
   const { theme } = useTheme();
   return (
     <section
@@ -12,18 +12,22 @@ export default function Hero() {
       }}
     >
       <h1 className="text-5xl font-extrabold mb-6" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.10)' }}>
-        Welcome to Education Primary School
+        {title || 'Welcome to Education Primary School'}
       </h1>
       <p className="text-xl mb-8 opacity-90">
-        Building a bright future, one lesson at a time.
+        {subtitle || 'Building a bright future, one lesson at a time.'}
       </p>
       <div className="flex justify-center gap-6 mt-8">
-        <a href="/about" className="bg-white text-blue-600 font-bold px-8 py-3 rounded-lg shadow-lg hover:bg-blue-100 transition-all">
-          Learn More
-        </a>
-        <a href="/admin" className="bg-blue-500 text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:bg-blue-600 transition-all">
-          Admin Login
-        </a>
+        {ctaText && ctaLink && (
+          <a href={ctaLink} className="bg-white text-blue-600 font-bold px-8 py-3 rounded-lg shadow-lg hover:bg-blue-100 transition-all">
+            {ctaText}
+          </a>
+        )}
+        {secondaryCtaText && secondaryCtaLink && (
+          <a href={secondaryCtaLink} className="bg-blue-500 text-white font-bold px-8 py-3 rounded-lg shadow-lg hover:bg-blue-600 transition-all">
+            {secondaryCtaText}
+          </a>
+        )}
       </div>
     </section>
   );

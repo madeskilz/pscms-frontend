@@ -2,7 +2,7 @@ exports.seed = async function(knex) {
   // Ensure admin user exists
   const admin = await knex('users').where({ email: 'admin@school.test' }).first();
 
-  // Insert settings: site_title, theme, homepage, primary_menu
+    // Insert settings: site_title, theme, homepage, hero, features, primary_menu
   const settings = [
     { key: 'site_title', value: JSON.stringify('K12 School CMS') },
     // Default to a kid-friendly theme; can be changed in admin later
@@ -12,12 +12,28 @@ exports.seed = async function(knex) {
       heroSubtitle: 'Inspiring excellence and growth for every student',
       ctaText: 'Explore Programs',
       ctaHref: '/about',
-      features: [
-        { title: 'Qualified Teachers', text: 'Our teachers are experienced and dedicated to student success.' },
-        { title: 'Modern Facilities', text: 'We provide a safe, inclusive, technology-enabled environment.' },
-        { title: 'Holistic Learning', text: 'Beyond academics: sports, arts, leadership, and community.' }
-      ]
+        featuredPostIds: []
     }) },
+      {
+          key: 'hero', value: JSON.stringify({
+              title: 'Welcome to Our School',
+              subtitle: 'Empowering the next generation through quality education and innovation',
+              ctaText: 'Learn More',
+              ctaLink: '/about',
+              secondaryCtaText: 'Contact Us',
+              secondaryCtaLink: '/contact'
+          })
+      },
+      {
+          key: 'features', value: JSON.stringify([
+              { icon: '📚', title: 'Quality Education', description: 'Experienced teachers dedicated to academic excellence and student success.' },
+              { icon: '💻', title: 'Modern Technology', description: 'State-of-the-art facilities and digital learning resources.' },
+              { icon: '🎨', title: 'Creative Arts', description: 'Encouraging creativity through music, drama, and visual arts programs.' },
+              { icon: '⚽', title: 'Sports & Fitness', description: 'Comprehensive athletics program promoting health and teamwork.' },
+              { icon: '🌍', title: 'Global Perspective', description: 'Preparing students to thrive in an interconnected world.' },
+              { icon: '🤝', title: 'Community', description: 'Building strong partnerships between students, parents, and staff.' }
+          ])
+      },
     // Include parent-focused quick links by default
     { key: 'primary_menu', value: JSON.stringify([
       { label: 'Home', href: '/' },

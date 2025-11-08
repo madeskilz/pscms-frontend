@@ -373,11 +373,31 @@ export default function AdminSettings() {
         <Card elevation={3}>
           <CardContent>
             <Typography variant="h5" gutterBottom>
-              Other Settings
+              Content Management
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Additional settings coming soon...
+            <Typography variant="body2" color="text.secondary" paragraph>
+              Manage your site's hero section and features
             </Typography>
+            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
+              <Button
+                component={NextLink}
+                href="/admin/hero"
+                variant="outlined"
+                size="large"
+                sx={{ minWidth: 200 }}
+              >
+                Edit Hero Section
+              </Button>
+              <Button
+                component={NextLink}
+                href="/admin/features"
+                variant="outlined"
+                size="large"
+                sx={{ minWidth: 200 }}
+              >
+                Edit Features Section
+              </Button>
+            </Box>
           </CardContent>
         </Card>
       </Container>

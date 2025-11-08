@@ -38,7 +38,7 @@ const PostCard = memo(function PostCard({ post }) {
     );
 });
 
-export default function Home({ posts, initialTheme, homepage }) {
+export default function Home({ posts, initialTheme, homepage, hero, features }) {
   const { theme, currentThemeId } = useTheme()
   const [HeroComponent, setHeroComponent] = useState(null)
     const [FeaturesComponent, setFeaturesComponent] = useState(null)
@@ -89,15 +89,17 @@ export default function Home({ posts, initialTheme, homepage }) {
                       <HeroSkeleton />
                   ) : HeroComponent ? (
                           <HeroComponent
-                              title={homepage?.heroTitle || 'Welcome to Our School'}
-                              subtitle={homepage?.heroSubtitle || 'Empowering the next generation through quality education and innovation'}
-                              ctaText={homepage?.ctaText}
-                              ctaHref={homepage?.ctaHref}
+                              title={hero?.title}
+                              subtitle={hero?.subtitle}
+                              ctaText={hero?.ctaText}
+                              ctaLink={hero?.ctaLink}
+                              secondaryCtaText={hero?.secondaryCtaText}
+                              secondaryCtaLink={hero?.secondaryCtaLink}
                           />
                   ) : null}
 
                   {/* Theme Features Section */}
-                  {hasFeatures && FeaturesComponent && <FeaturesComponent />}
+                  {hasFeatures && FeaturesComponent && <FeaturesComponent features={features} />}
 
                   <Container maxWidth="lg" sx={{ py: 8 }}>
                                             {/* Parent Quick Links Section */}
@@ -223,21 +225,25 @@ export default function Home({ posts, initialTheme, homepage }) {
 
 export async function getServerSideProps() {
   try {
-      const [postsData, themeData, homepageSetting] = await Promise.all([
+      const [postsData, themeData, homepageSetting, heroSetting, featuresSetting] = await Promise.all([
           getPosts(null, 1, 'post'),
           getSetting('theme'),
-          getSetting('homepage')
+          getSetting('homepage'),
+          getSetting('hero'),
+          getSetting('features')
       ])
     const published = (postsData.data || []).filter(p => p.status === 'published')
     return { 
       props: { 
             posts: published,
             initialTheme: themeData?.active || 'classic',
-            homepage: homepageSetting || null
+            homepage: homepageSetting || null,
+            hero: heroSetting || null,
+            features: featuresSetting || []
       } 
     }
   } catch (error) {
     console.error('Failed to fetch data for homepage:', error)
-      return { props: { posts: [], initialTheme: 'classic', homepage: null } }
+      return { props: { posts: [], initialTheme: 'classic', homepage: null, hero: null, features: [] } }
   }
 }
