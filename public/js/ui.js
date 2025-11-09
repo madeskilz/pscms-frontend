@@ -60,7 +60,7 @@ const UI = {
   /**
    * Render current view based on hash
    */
-  render() {
+    async render() {
     const hash = window.location.hash.slice(1) || '/';
     const app = document.getElementById('app');
 
@@ -71,7 +71,7 @@ const UI = {
       }
       this.renderAdmin(hash);
     } else {
-      this.renderPublic(hash);
+        await this.renderPublic(hash);
     }
   },
 
@@ -88,15 +88,14 @@ const UI = {
           <form data-form="login">
             <div class="form-group">
               <label for="email">Email</label>
-              <input type="email" id="email" name="email" required value="admin@school.test">
+              <input type="email" id="email" name="email" required>
             </div>
             <div class="form-group">
               <label for="password">Password</label>
-              <input type="password" id="password" name="password" required value="ChangeMe123!">
+              <input type="password" id="password" name="password" required>
             </div>
             <button type="submit" class="btn-primary">Login</button>
           </form>
-          <p class="login-hint">Default: admin@school.test / ChangeMe123!</p>
           <a href="#/" data-route="/" class="back-link">← Back to site</a>
         </div>
       </div>
@@ -379,7 +378,7 @@ const UI = {
   /**
    * Render public site
    */
-  renderPublic(hash) {
+    async renderPublic(hash) {
     const app = document.getElementById('app');
     const theme = this.getActiveTheme();
     
@@ -389,7 +388,7 @@ const UI = {
     let content = '';
 
     if (hash === '/' || hash === '') {
-      content = this.renderHome();
+        content = await this.renderHome();
     } else if (hash.startsWith('/posts/')) {
       const slug = hash.replace('/posts/', '');
       content = this.renderPost(slug);
@@ -401,7 +400,8 @@ const UI = {
       content = this.renderPage(slug);
     }
 
-    app.innerHTML = nav + `<main class="public-content">${content}</main>` + this.renderPublicFooter();
+        const themeClass = `theme-${theme}`;
+        app.innerHTML = nav + `<main class="public-content ${themeClass}">${content}</main>` + this.renderPublicFooter();
   },
 
   /**
@@ -421,8 +421,11 @@ const UI = {
       `<a href="#${item.href}" data-route="${item.href}">${item.label}</a>`
     ).join('');
 
+      const theme = this.getActiveTheme();
+      const themeClass = `theme-${theme}`;
+
     return `
-      <nav class="public-nav">
+      <nav class="public-nav ${themeClass}">
         <div class="nav-brand">
           <h1>School CMS</h1>
         </div>
@@ -452,9 +455,9 @@ const UI = {
   },
 
   /**
-   * Render homepage
+   * Render home page with theme support
    */
-  renderHome() {
+    async renderHome() {
     const hero = db.queryOne('SELECT value FROM settings WHERE key = ?', ['hero']);
     const features = db.queryOne('SELECT value FROM settings WHERE key = ?', ['features']);
     const posts = db.query(
@@ -469,6 +472,28 @@ const UI = {
       if (hero) heroData = JSON.parse(hero.value);
       if (features) featuresData = JSON.parse(features.value);
     } catch (e) {}
+
+        // Get active theme
+        const activeTheme = this.getActiveTheme();
+
+        // Try to load theme's Hero component
+        let heroHtml = '';
+        try {
+            const themeModule = await import(`/themes/${activeTheme}/components/Hero.js`);
+            if (themeModule && themeModule.renderHero) {
+                heroHtml = themeModule.renderHero(heroData);
+            }
+        } catch (e) {
+            console.log(`[Theme] No custom Hero for ${activeTheme}, using default`);
+            // Fallback to default hero
+            heroHtml = `
+        <section class="hero">
+          <h1>${heroData.title}</h1>
+          <p>${heroData.subtitle}</p>
+          <a href="#${heroData.ctaLink}" data-route="${heroData.ctaLink}" class="btn-primary">${heroData.ctaText}</a>
+        </section>
+      `;
+        }
 
     const featuresList = featuresData.map(f => `
       <div class="feature-card">
@@ -487,11 +512,7 @@ const UI = {
 
     return `
       <div class="home">
-        <section class="hero">
-          <h1>${heroData.title}</h1>
-          <p>${heroData.subtitle}</p>
-          <a href="#${heroData.ctaLink}" data-route="${heroData.ctaLink}" class="btn-primary">${heroData.ctaText}</a>
-        </section>
+        ${heroHtml}
 
         ${featuresList ? `
           <section class="features">

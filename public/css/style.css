@@ -625,3 +625,58 @@ body {
   background: rgba(255,255,255,0.2);
   border-radius: 50%;
 }
+
+/* Theme-specific Styling */
+/* Classic Theme - Purple gradient */
+.public-nav.theme-classic {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.public-content.theme-classic .hero {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Modern Theme - Dark with cyan */
+.public-nav.theme-modern {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+}
+
+.public-content.theme-modern .hero {
+  background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+}
+
+/* Vibrant Theme - Pink to yellow */
+.public-nav.theme-vibrant {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+.public-content.theme-vibrant .hero {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Colorlib Kids Theme - Orange/yellow */
+.public-nav.theme-colorlib-kids {
+  background: linear-gradient(135deg, #ff9a56 0%, #ffd32a 100%);
+}
+
+.public-content.theme-colorlib-kids .hero {
+  background: linear-gradient(135deg, #ff9a56 0%, #ffd32a 100%);
+}
+
+/* Colorlib Education Theme - Blue gradient */
+.public-nav.theme-colorlib-education {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.public-content.theme-colorlib-education .hero {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Colorlib Fresh Theme - Green gradient */
+.public-nav.theme-colorlib-fresh {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}
+
+.public-content.theme-colorlib-fresh .hero {
+  background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+}

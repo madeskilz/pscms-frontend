@@ -62,7 +62,7 @@
  * Check if database file exists
  */
 async function checkDatabaseFileExists() {
-  const paths = ['db/cms.db', 'db/sqlite.db', 'db/app.sqlite'];
+    const paths = ['db/cms.sqlite', 'db/cms.db', 'db/sqlite.db', 'db/app.sqlite'];
   for (const path of paths) {
     try {
       const response = await fetch(path, { method: 'HEAD' });
@@ -81,15 +81,16 @@ function showDatabaseSetupNotification() {
   notification.innerHTML = `
     <button class="close-btn" onclick="this.parentElement.remove()">×</button>
     <h4>🗄️ File-Only Mode</h4>
-    <p><strong>cms.db</strong> has been downloaded to your Downloads folder.</p>
-    <p><strong>⚠️ IMPORTANT:</strong> No localStorage - all data is file-based!</p>
+    <p><strong>No database file detected.</strong> The app is running in memory.</p>
+    <p><strong>⚠️ IMPORTANT:</strong> No localStorage - all admin data is file-based!</p>
     <ol>
-      <li>Move <code>cms.db</code> to <code>/dist/db/</code></li>
+      <li>Login to Admin → go to <strong>Database</strong></li>
+      <li>Click <strong>Export Database</strong> to download <code>cms.db</code></li>
+      <li>Place <code>cms.db</code> in <code>/dist/db/</code></li>
       <li>Refresh this page</li>
-      <li>Export database after making changes</li>
     </ol>
     <p style="font-size:0.85rem;margin-top:10px;opacity:0.9;background:rgba(255,255,255,0.1);padding:8px;border-radius:4px;">
-      💡 Your changes exist only in memory until you export and replace the file in /dist/db/
+      💡 Changes exist only in memory until you export and replace the file in /dist/db/
     </p>
     <button onclick="this.parentElement.remove()">Got it!</button>
   `;

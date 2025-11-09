@@ -24,12 +24,12 @@ class Database {
     });
 
     // Load database ONLY from file system - no localStorage
-    // Priority: File system → Create new (with auto-download)
+      // Priority: File system → Create new (in-memory; no auto-download)
     
     let dbLoaded = false;
     
-    // Try loading from filesystem
-    const dbPaths = ['db/cms.db', 'db/sqlite.db', 'db/app.sqlite'];
+      // Try loading from filesystem (check cms.sqlite first)
+      const dbPaths = ['db/cms.sqlite', 'db/cms.db', 'db/sqlite.db', 'db/app.sqlite'];
     for (const path of dbPaths) {
       try {
         console.log(`[DB] Attempting to load from ${path}...`);
@@ -38,7 +38,7 @@ class Database {
           const arrayBuffer = await response.arrayBuffer();
           const uint8Array = new Uint8Array(arrayBuffer);
           this.db = new this.SQL.Database(uint8Array);
-          console.log(`[DB] Database loaded from ${path}`);
+            console.log(`[DB] ✓ Database loaded from ${path}`);
           console.log('[DB] ✓ File-based mode - no localStorage used');
           dbLoaded = true;
           break;
@@ -51,19 +51,11 @@ class Database {
     // If not loaded from file, create new database
     if (!dbLoaded) {
       console.log('[DB] No database file found - creating new database');
-      console.log('[DB] ⚠️  Database will exist in memory only until downloaded');
+        console.log('[DB] ⚠️  Database will exist in memory until you export it');
       this.db = new this.SQL.Database();
       await this.createSchema();
       await this.seedInitialData();
-      this.save();
-      
-      // Auto-download the database file for user to place in /db/ folder
-      console.log('[DB] Auto-downloading cms.db file...');
-      console.log('[DB] ⚠️  IMPORTANT: Move this file to /dist/db/ to persist your data');
-      setTimeout(() => {
-        const data = this.db.export();
-        this._saveToFile(data, 'cms.db');
-      }, 1000); // Small delay to ensure console messages are visible
+        this.save();
     }
 
     this.ready = true;
