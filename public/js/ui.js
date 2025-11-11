@@ -1056,259 +1056,207 @@ const UI = {
     },
 
     /**
-     * Render Admissions page
+     * Render Admissions page - Modern list view
      */
     renderAdmissionsPage() {
-        const data = db.queryOne('SELECT value FROM settings WHERE key = ?', ['admissions_page']);
-        let admissions = { hero: {}, process: [], requirements: {}, admissionCriteria: [], importantDates: [] };
-        try {
-            if (data) admissions = JSON.parse(data.value);
-        } catch (e) { }
+        // Get all pages of type 'page' with 'admission' in slug or title
+        const admissionPages = db.queryAll(
+            `SELECT id, title, slug, content, created_at, updated_at 
+             FROM posts 
+             WHERE status = ? AND (type = ? OR slug LIKE ? OR title LIKE ?) 
+             ORDER BY created_at DESC`,
+            ['published', 'page', '%admission%', '%Admission%']
+        );
 
         return `
       <div class="page-container admissions-page">
         <div class="page-header">
-          <h1>${admissions.hero?.title || 'Admissions'}</h1>
-          <p class="page-subtitle">${admissions.hero?.subtitle || ''}</p>
+          <h1>🎓 Admissions</h1>
+          <p class="page-subtitle">Everything you need to know about joining our school</p>
         </div>
 
-        ${admissions.process && admissions.process.length > 0 ? `
-          <section class="content-section">
-            <h2>Admission Process</h2>
-            <div class="process-steps">
-              ${admissions.process.map(step => `
-                <div class="process-step">
-                  <div class="step-number">${step.icon}</div>
-                  <div class="step-content">
-                    <h3>Step ${step.step}: ${step.title}</h3>
-                    <p>${step.description}</p>
-                  </div>
-                </div>
-              `).join('')}
-            </div>
-          </section>
-        ` : ''}
-
-        <div class="two-column-section">
-          ${admissions.requirements ? `
-            <section class="content-card">
-              <h3>📋 Required Documents</h3>
-              <ul class="checklist">
-                ${(admissions.requirements.documents || []).map(doc => `<li>${doc}</li>`).join('')}
-              </ul>
-            </section>
-          ` : ''}
-
-          ${admissions.admissionCriteria && admissions.admissionCriteria.length > 0 ? `
-            <section class="content-card">
-              <h3>✓ Admission Criteria</h3>
-              <ul class="checklist">
-                ${admissions.admissionCriteria.map(criteria => `<li>${criteria}</li>`).join('')}
-              </ul>
-            </section>
-          ` : ''}
+        <!-- Quick Info Cards -->
+        <div class="info-cards-grid">
+          <div class="info-card gradient-blue">
+            <div class="info-icon">📝</div>
+            <h3>Application</h3>
+            <p>Submit your application online or visit our office</p>
+          </div>
+          <div class="info-card gradient-purple">
+            <div class="info-icon">📅</div>
+            <h3>Timeline</h3>
+            <p>Applications accepted year-round for all grades</p>
+          </div>
+          <div class="info-card gradient-green">
+            <div class="info-icon">💰</div>
+            <h3>Fees</h3>
+            <p>Competitive and transparent fee structure</p>
+          </div>
+          <div class="info-card gradient-orange">
+            <div class="info-icon">🎯</div>
+            <h3>Requirements</h3>
+            <p>Simple documentation and age-appropriate criteria</p>
+          </div>
         </div>
 
-        ${admissions.requirements?.fees ? `
-          <section class="content-section fees-section">
-            <h2>Fee Structure</h2>
-            <div class="fees-grid">
-              <div class="fee-card">
-                <h3>Application Fee</h3>
-                <p class="fee-amount">${admissions.requirements.fees.application}</p>
-              </div>
-              <div class="fee-card">
-                <h3>Registration Fee</h3>
-                <p class="fee-amount">${admissions.requirements.fees.registration}</p>
-              </div>
-              ${admissions.requirements.fees.tuition ? `
-                <div class="fee-card">
-                  <h3>Primary Tuition</h3>
-                  <p class="fee-amount">${admissions.requirements.fees.tuition.primary}</p>
-                </div>
-                <div class="fee-card">
-                  <h3>Secondary Tuition</h3>
-                  <p class="fee-amount">${admissions.requirements.fees.tuition.secondary}</p>
-                </div>
-              ` : ''}
-            </div>
-          </section>
-        ` : ''}
-
-        ${admissions.importantDates && admissions.importantDates.length > 0 ? `
+        <!-- Admission Information List -->
+        ${admissionPages.length > 0 ? `
           <section class="content-section">
-            <h2>Important Dates</h2>
-            <div class="dates-timeline">
-              ${admissions.importantDates.map(item => `
-                <div class="date-item">
-                  <div class="date-marker"></div>
-                  <div class="date-content">
-                    <h3>${item.event}</h3>
-                    <p class="date-value">${item.date}</p>
+            <h2>📚 Admission Information</h2>
+            <div class="modern-list">
+              ${admissionPages.map(page => {
+                  const excerpt = page.content ? page.content.substring(0, 200).replace(/<[^>]*>/g, '') + '...' : 'Click to read more about this admission information.';
+                  const date = new Date(page.updated_at || page.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                  return `
+                  <div class="modern-list-item">
+                    <div class="list-item-icon">📄</div>
+                    <div class="list-item-content">
+                      <h3><a href="#/posts/${page.slug}" data-route="/posts/${page.slug}">${page.title}</a></h3>
+                      <p class="list-item-excerpt">${excerpt}</p>
+                      <div class="list-item-meta">
+                        <span class="meta-date">📅 ${date}</span>
+                        <a href="#/posts/${page.slug}" data-route="/posts/${page.slug}" class="read-more-link">Read More →</a>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              `).join('')}
+                `;
+              }).join('')}
             </div>
           </section>
         ` : ''}
 
-        <section class="cta-section">
-          <h2>Ready to Apply?</h2>
-          <p>Start your child's educational journey with us today!</p>
-          <a href="#/contact" data-route="/contact" class="btn-primary">Contact Admissions Office</a>
+        <!-- Admission Process Steps -->
+        <section class="content-section">
+          <h2>🚀 How to Apply</h2>
+          <div class="process-steps-modern">
+            <div class="step-card">
+              <div class="step-number-modern">1</div>
+              <h3>Submit Application</h3>
+              <p>Fill out the online application form or visit our admissions office to get started.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern">2</div>
+              <h3>Document Review</h3>
+              <p>Submit required documents including birth certificate, previous records, and photos.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern">3</div>
+              <h3>Assessment</h3>
+              <p>Age-appropriate assessment to determine the right class placement for your child.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern">4</div>
+              <h3>Enrollment</h3>
+              <p>Complete enrollment process, pay fees, and receive your admission letter.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section-modern">
+          <div class="cta-content">
+            <h2>Ready to Join Our School Family?</h2>
+            <p>Start your child's educational journey with us today. Our admissions team is here to help!</p>
+            <div class="cta-buttons">
+              <a href="#/contact" data-route="/contact" class="btn-primary-modern">Contact Admissions</a>
+              <a href="#/about" data-route="/about" class="btn-secondary-modern">Learn More About Us</a>
+            </div>
+          </div>
         </section>
       </div>
     `;
     },
 
     /**
-     * Render Calendar page
+     * Render Calendar page - Modern events list view
      */
     renderCalendarPage() {
-        const now = new Date();
-        const currentMonth = now.getMonth();
-        const currentYear = now.getFullYear();
+        // Get all posts ordered by date
+        const allPosts = db.queryAll(
+            'SELECT id, title, slug, content, created_at, updated_at FROM posts WHERE status = ? ORDER BY created_at DESC LIMIT 50',
+            ['published']
+        );
 
-        // Get calendar state from session or initialize
-        if (!window.calendarState) {
-            window.calendarState = {
-                selectedMonth: currentMonth,
-                selectedYear: currentYear,
-                selectedDate: null
-            };
-        }
-
-        const { selectedMonth, selectedYear, selectedDate } = window.calendarState;
-
-        // Get posts for the calendar
-        const posts = db.queryAll('SELECT id, title, slug, created_at, content FROM posts WHERE status = ? ORDER BY created_at DESC', ['published']);
-
-        // Group posts by date
-        const postsByDate = {};
-        posts.forEach(post => {
+        // Group posts by month
+        const postsByMonth = {};
+        allPosts.forEach(post => {
             const date = new Date(post.created_at);
-            const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-            if (!postsByDate[dateKey]) {
-                postsByDate[dateKey] = [];
+            const monthKey = date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+            if (!postsByMonth[monthKey]) {
+                postsByMonth[monthKey] = [];
             }
-            postsByDate[dateKey].push(post);
+            postsByMonth[monthKey].push(post);
         });
 
-        // Generate calendar
-        const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
-        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
-        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-        let calendarHTML = '';
-        let dayCounter = 1;
-
-        for (let i = 0; i < 6; i++) {
-            let weekHTML = '<div class="calendar-week">';
-            for (let j = 0; j < 7; j++) {
-                if ((i === 0 && j < firstDay) || dayCounter > daysInMonth) {
-                    weekHTML += '<div class="calendar-day empty"></div>';
-                } else {
-                    const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
-                    const hasPosts = postsByDate[dateKey] && postsByDate[dateKey].length > 0;
-                    const isToday = dayCounter === now.getDate() && selectedMonth === currentMonth && selectedYear === currentYear;
-                    const isSelected = selectedDate === dateKey;
-
-                    weekHTML += `
-                        <div class="calendar-day ${hasPosts ? 'has-posts' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" 
-                             data-date="${dateKey}" 
-                             onclick="window.app.handleCalendarDateClick('${dateKey}')">
-                            <span class="day-number">${dayCounter}</span>
-                            ${hasPosts ? `<span class="post-indicator">${postsByDate[dateKey].length}</span>` : ''}
-                        </div>
-                    `;
-                    dayCounter++;
-                }
-            }
-            weekHTML += '</div>';
-            calendarHTML += weekHTML;
-            if (dayCounter > daysInMonth) break;
-        }
-
-        // Get posts for selected date
-        let selectedDatePosts = '';
-        if (selectedDate && postsByDate[selectedDate]) {
-            selectedDatePosts = `
-                <div class="selected-date-posts">
-                    <h3>Posts on ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
-                    <div class="posts-list-vertical">
-                        ${postsByDate[selectedDate].map(post => {
-                const excerpt = post.content ? post.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...' : '';
-                return `
-                                <div class="post-card-calendar">
-                                    <h4><a href="#/posts/${post.slug}" data-route="/posts/${post.slug}">${post.title}</a></h4>
-                                    <p class="post-excerpt">${excerpt}</p>
-                                    <a href="#/posts/${post.slug}" data-route="/posts/${post.slug}" class="read-more-btn">Read More →</a>
-                                </div>
-                            `;
-            }).join('')}
-                    </div>
-                </div>
-            `;
-        }
+        const now = new Date();
+        const currentMonth = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
 
         return `
       <div class="page-container calendar-page">
         <div class="page-header">
-          <h1>📅 Academic Calendar</h1>
-          <p class="page-subtitle">View posts and events by date</p>
+          <h1>📅 Events & Updates</h1>
+          <p class="page-subtitle">All school events, news, and announcements organized by date</p>
         </div>
 
-        <div class="calendar-container">
-            <div class="calendar-header">
-                <button class="calendar-nav-btn" onclick="window.app.changeCalendarMonth(-1)">❮</button>
-                <h2 class="calendar-month-year">${monthNames[selectedMonth]} ${selectedYear}</h2>
-                <button class="calendar-nav-btn" onclick="window.app.changeCalendarMonth(1)">❯</button>
+        <!-- Current Month Highlight -->
+        <div class="current-month-banner">
+          <div class="banner-content">
+            <div class="banner-icon">📆</div>
+            <div>
+              <h2>${currentMonth}</h2>
+              <p>${allPosts.filter(p => {
+                  const date = new Date(p.created_at);
+                  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' }) === currentMonth;
+              }).length} events and updates this month</p>
             </div>
-
-            <div class="calendar-weekdays">
-                <div class="calendar-weekday">Sun</div>
-                <div class="calendar-weekday">Mon</div>
-                <div class="calendar-weekday">Tue</div>
-                <div class="calendar-weekday">Wed</div>
-                <div class="calendar-weekday">Thu</div>
-                <div class="calendar-weekday">Fri</div>
-                <div class="calendar-weekday">Sat</div>
-            </div>
-
-            <div class="calendar-grid">
-                ${calendarHTML}
-            </div>
+          </div>
         </div>
 
-        ${selectedDatePosts}
+        <!-- Posts Timeline -->
+        ${Object.keys(postsByMonth).length > 0 ? Object.keys(postsByMonth).map(monthKey => `
+          <section class="month-section-modern">
+            <div class="month-header-sticky">
+              <h2 class="month-title">${monthKey}</h2>
+              <span class="month-count">${postsByMonth[monthKey].length} ${postsByMonth[monthKey].length === 1 ? 'event' : 'events'}</span>
+            </div>
+            
+            <div class="timeline-list">
+              ${postsByMonth[monthKey].map(post => {
+                  const date = new Date(post.created_at);
+                  const day = date.getDate();
+                  const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+                  const excerpt = post.content ? post.content.substring(0, 180).replace(/<[^>]*>/g, '') + '...' : '';
+                  const isToday = date.toDateString() === now.toDateString();
+
+                  return `
+                  <div class="timeline-item ${isToday ? 'timeline-today' : ''}">
+                    <div class="timeline-date">
+                      <div class="date-number">${day}</div>
+                      <div class="date-weekday">${weekday}</div>
+                    </div>
+                    <div class="timeline-connector"></div>
+                    <div class="timeline-content">
+                      <div class="timeline-card">
+                        ${isToday ? '<span class="today-badge">Today</span>' : ''}
+                        <h3><a href="#/posts/${post.slug}" data-route="/posts/${post.slug}">${post.title}</a></h3>
+                        <p class="timeline-excerpt">${excerpt}</p>
+                        <a href="#/posts/${post.slug}" data-route="/posts/${post.slug}" class="timeline-read-more">Read Full Article →</a>
+                      </div>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        `).join('') : `
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h3>No Events Yet</h3>
+            <p>Check back soon for upcoming events and announcements!</p>
+          </div>
+        `}
       </div>
     `;
-    },
-
-    /**
-     * Handle calendar date click
-     */
-    handleCalendarDateClick(dateKey) {
-        window.calendarState.selectedDate = dateKey;
-        this.renderContent();
-    },
-
-    /**
-     * Change calendar month
-     */
-    changeCalendarMonth(direction) {
-        window.calendarState.selectedMonth += direction;
-
-        if (window.calendarState.selectedMonth > 11) {
-            window.calendarState.selectedMonth = 0;
-            window.calendarState.selectedYear++;
-        } else if (window.calendarState.selectedMonth < 0) {
-            window.calendarState.selectedMonth = 11;
-            window.calendarState.selectedYear--;
-        }
-
-        window.calendarState.selectedDate = null; // Clear selection when changing month
-        this.renderContent();
     },
 
     /**
