@@ -218,9 +218,9 @@ class Database {
       {
         key: 'features',
         value: JSON.stringify([
-          { title: 'Quality Education', description: 'Committed to academic excellence', icon: 'school' },
-          { title: 'Supportive Environment', description: 'A safe and nurturing space', icon: 'favorite' },
-          { title: 'Extracurricular Activities', description: 'Sports, arts, and clubs', icon: 'sports' }
+            { title: 'Quality Education', description: 'Committed to academic excellence', icon: '📚' },
+            { title: 'Supportive Environment', description: 'A safe and nurturing space', icon: '🤝' },
+            { title: 'Extracurricular Activities', description: 'Sports, arts, and clubs', icon: '⚽' }
         ])
       },
       {
@@ -231,6 +231,60 @@ class Database {
           { label: 'Posts', href: '/posts' },
           { label: 'Contact', href: '/contact' }
         ])
+        },
+        {
+            key: 'about_page',
+            value: JSON.stringify({
+                vision: 'To be the leading educational institution in Nigeria, nurturing innovative thinkers and responsible global citizens who will shape the future of our nation and the world.',
+                mission: 'We are committed to providing quality education that empowers Nigerian K12 students to reach their full potential. Our goal is to create a nurturing environment where every student can thrive academically, socially, and personally through innovative teaching methods, character development, and community engagement.',
+                values: [
+                    { title: 'Excellence', description: 'We strive for the highest standards in education and character development, encouraging students to pursue their personal best in all endeavors.' },
+                    { title: 'Integrity', description: 'We uphold honesty, transparency, and ethical behavior in all our interactions, building a foundation of trust within our community.' },
+                    { title: 'Innovation', description: 'We embrace modern teaching methods and technology to enhance learning, preparing students for a rapidly evolving world.' },
+                    { title: 'Community', description: 'We foster a strong sense of belonging and collaboration among students, staff, and parents, creating a supportive network that extends beyond the classroom.' },
+                    { title: 'Diversity', description: 'We celebrate and respect the unique backgrounds, perspectives, and talents of every member of our school community.' },
+                    { title: 'Growth', description: 'We encourage continuous learning and personal development for students, teachers, and staff alike.' }
+                ],
+                facilities: [
+                    { icon: '📚', title: 'Modern Library', description: 'Well-stocked with over 10,000 books, digital resources, and quiet study spaces for independent learning.' },
+                    { icon: '🔬', title: 'Science Laboratories', description: 'State-of-the-art physics, chemistry, and biology labs equipped for hands-on experiments and research projects.' },
+                    { icon: '💻', title: 'Computer Center', description: 'Latest technology with high-speed internet, coding labs, and multimedia production facilities.' },
+                    { icon: '⚽', title: 'Sports Complex', description: 'Full-sized football pitch, basketball court, athletics track, and indoor sports hall for comprehensive physical education.' },
+                    { icon: '🎨', title: 'Art Studios', description: 'Dedicated spaces for visual arts, music, drama, and creative expression with professional-grade equipment.' },
+                    { icon: '🍽️', title: 'Cafeteria', description: 'Healthy meal options prepared fresh daily in our modern kitchen, with spacious dining areas.' }
+                ],
+                achievements: [
+                    { year: '2024', title: 'National Science Competition', description: '1st Place in National Schools Science Competition' },
+                    { year: '2023', title: 'Academic Excellence', description: '98% pass rate in WAEC examinations' },
+                    { year: '2023', title: 'Sports Championship', description: 'Regional Football Champions' },
+                    { year: '2022', title: 'Innovation Award', description: 'Best STEM Program in Lagos State' }
+                ]
+            })
+        },
+        {
+            key: 'contact_page',
+            value: JSON.stringify({
+                phone: '+234 (0) 123 456 7890',
+                email: 'info@school.test',
+                address: '123 Education Avenue, Victoria Island, Lagos, Nigeria',
+                officeHours: [
+                    { day: 'Monday - Friday', hours: '8:00 AM - 4:00 PM' },
+                    { day: 'Saturday', hours: '9:00 AM - 1:00 PM' },
+                    { day: 'Sunday', hours: 'Closed' }
+                ],
+                departments: [
+                    { name: 'Admissions Office', email: 'admissions@school.test', phone: '+234 (0) 123 456 7891' },
+                    { name: 'Accounts Department', email: 'accounts@school.test', phone: '+234 (0) 123 456 7892' },
+                    { name: 'Principal\'s Office', email: 'principal@school.test', phone: '+234 (0) 123 456 7893' },
+                    { name: 'IT Support', email: 'support@school.test', phone: '+234 (0) 123 456 7894' }
+                ],
+                socialMedia: [
+                    { platform: 'Facebook', url: 'https://facebook.com/school', icon: '📘' },
+                    { platform: 'Twitter', url: 'https://twitter.com/school', icon: '🐦' },
+                    { platform: 'Instagram', url: 'https://instagram.com/school', icon: '📷' },
+                    { platform: 'LinkedIn', url: 'https://linkedin.com/school', icon: '💼' }
+                ]
+            })
       }
     ];
 
