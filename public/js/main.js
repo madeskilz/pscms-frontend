@@ -22,6 +22,12 @@
     // Initialize UI
     UI.init();
 
+      // Expose UI methods to window for calendar interactions
+      window.app = {
+          handleCalendarDateClick: (dateKey) => UI.handleCalendarDateClick(dateKey),
+          changeCalendarMonth: (direction) => UI.changeCalendarMonth(direction)
+      };
+
     // Handle hash changes (routing)
     window.addEventListener('hashchange', () => {
       UI.render();

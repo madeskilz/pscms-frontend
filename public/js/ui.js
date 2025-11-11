@@ -1165,70 +1165,150 @@ const UI = {
      * Render Calendar page
      */
     renderCalendarPage() {
-        const data = db.queryOne('SELECT value FROM settings WHERE key = ?', ['calendar_page']);
-        let calendar = { hero: {}, currentTerm: {}, events: [], termDates: [] };
-        try {
-            if (data) calendar = JSON.parse(data.value);
-        } catch (e) { }
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        // Get calendar state from session or initialize
+        if (!window.calendarState) {
+            window.calendarState = {
+                selectedMonth: currentMonth,
+                selectedYear: currentYear,
+                selectedDate: null
+            };
+        }
+
+        const { selectedMonth, selectedYear, selectedDate } = window.calendarState;
+
+        // Get posts for the calendar
+        const posts = db.queryAll('SELECT id, title, slug, created_at, content FROM posts WHERE status = ? ORDER BY created_at DESC', ['published']);
+
+        // Group posts by date
+        const postsByDate = {};
+        posts.forEach(post => {
+            const date = new Date(post.created_at);
+            const dateKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            if (!postsByDate[dateKey]) {
+                postsByDate[dateKey] = [];
+            }
+            postsByDate[dateKey].push(post);
+        });
+
+        // Generate calendar
+        const firstDay = new Date(selectedYear, selectedMonth, 1).getDay();
+        const daysInMonth = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+        const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+        let calendarHTML = '';
+        let dayCounter = 1;
+
+        for (let i = 0; i < 6; i++) {
+            let weekHTML = '<div class="calendar-week">';
+            for (let j = 0; j < 7; j++) {
+                if ((i === 0 && j < firstDay) || dayCounter > daysInMonth) {
+                    weekHTML += '<div class="calendar-day empty"></div>';
+                } else {
+                    const dateKey = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(dayCounter).padStart(2, '0')}`;
+                    const hasPosts = postsByDate[dateKey] && postsByDate[dateKey].length > 0;
+                    const isToday = dayCounter === now.getDate() && selectedMonth === currentMonth && selectedYear === currentYear;
+                    const isSelected = selectedDate === dateKey;
+
+                    weekHTML += `
+                        <div class="calendar-day ${hasPosts ? 'has-posts' : ''} ${isToday ? 'today' : ''} ${isSelected ? 'selected' : ''}" 
+                             data-date="${dateKey}" 
+                             onclick="window.app.handleCalendarDateClick('${dateKey}')">
+                            <span class="day-number">${dayCounter}</span>
+                            ${hasPosts ? `<span class="post-indicator">${postsByDate[dateKey].length}</span>` : ''}
+                        </div>
+                    `;
+                    dayCounter++;
+                }
+            }
+            weekHTML += '</div>';
+            calendarHTML += weekHTML;
+            if (dayCounter > daysInMonth) break;
+        }
+
+        // Get posts for selected date
+        let selectedDatePosts = '';
+        if (selectedDate && postsByDate[selectedDate]) {
+            selectedDatePosts = `
+                <div class="selected-date-posts">
+                    <h3>Posts on ${new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h3>
+                    <div class="posts-list-vertical">
+                        ${postsByDate[selectedDate].map(post => {
+                const excerpt = post.content ? post.content.substring(0, 150).replace(/<[^>]*>/g, '') + '...' : '';
+                return `
+                                <div class="post-card-calendar">
+                                    <h4><a href="#/posts/${post.slug}" data-route="/posts/${post.slug}">${post.title}</a></h4>
+                                    <p class="post-excerpt">${excerpt}</p>
+                                    <a href="#/posts/${post.slug}" data-route="/posts/${post.slug}" class="read-more-btn">Read More →</a>
+                                </div>
+                            `;
+            }).join('')}
+                    </div>
+                </div>
+            `;
+        }
 
         return `
       <div class="page-container calendar-page">
         <div class="page-header">
-          <h1>${calendar.hero?.title || 'Academic Calendar'}</h1>
-          <p class="page-subtitle">${calendar.hero?.subtitle || ''}</p>
+          <h1>📅 Academic Calendar</h1>
+          <p class="page-subtitle">View posts and events by date</p>
         </div>
 
-        ${calendar.currentTerm ? `
-          <div class="current-term-banner">
-            <h2>${calendar.currentTerm.name}</h2>
-            <p>${calendar.currentTerm.startDate} - ${calendar.currentTerm.endDate}</p>
-          </div>
-        ` : ''}
-
-        ${calendar.events && calendar.events.length > 0 ? `
-          <section class="content-section">
-            <h2>Upcoming Events</h2>
-            <div class="events-grid">
-              ${calendar.events.map(monthGroup => `
-                <div class="month-section">
-                  <h3 class="month-header">${monthGroup.month}</h3>
-                  <div class="events-list">
-                    ${monthGroup.items.map(event => `
-                      <div class="event-card event-${event.type}">
-                        <div class="event-date">${event.date}</div>
-                        <div class="event-details">
-                          <h4>${event.title}</h4>
-                          <p>${event.description}</p>
-                        </div>
-                      </div>
-                    `).join('')}
-                  </div>
-                </div>
-              `).join('')}
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <button class="calendar-nav-btn" onclick="window.app.changeCalendarMonth(-1)">❮</button>
+                <h2 class="calendar-month-year">${monthNames[selectedMonth]} ${selectedYear}</h2>
+                <button class="calendar-nav-btn" onclick="window.app.changeCalendarMonth(1)">❯</button>
             </div>
-          </section>
-        ` : ''}
 
-        ${calendar.termDates && calendar.termDates.length > 0 ? `
-          <section class="content-section">
-            <h2>Term Dates</h2>
-            <div class="term-dates-grid">
-              ${calendar.termDates.map(term => `
-                <div class="term-card">
-                  <h3>${term.term}</h3>
-                  <ul class="term-details">
-                    <li><strong>Resumption:</strong> ${term.resumption}</li>
-                    <li><strong>Mid-Term Break:</strong> ${term.midTerm}</li>
-                    <li><strong>Exams:</strong> ${term.exams}</li>
-                    <li><strong>Vacation:</strong> ${term.vacation}</li>
-                  </ul>
-                </div>
-              `).join('')}
+            <div class="calendar-weekdays">
+                <div class="calendar-weekday">Sun</div>
+                <div class="calendar-weekday">Mon</div>
+                <div class="calendar-weekday">Tue</div>
+                <div class="calendar-weekday">Wed</div>
+                <div class="calendar-weekday">Thu</div>
+                <div class="calendar-weekday">Fri</div>
+                <div class="calendar-weekday">Sat</div>
             </div>
-          </section>
-        ` : ''}
+
+            <div class="calendar-grid">
+                ${calendarHTML}
+            </div>
+        </div>
+
+        ${selectedDatePosts}
       </div>
     `;
+    },
+
+    /**
+     * Handle calendar date click
+     */
+    handleCalendarDateClick(dateKey) {
+        window.calendarState.selectedDate = dateKey;
+        this.renderContent();
+    },
+
+    /**
+     * Change calendar month
+     */
+    changeCalendarMonth(direction) {
+        window.calendarState.selectedMonth += direction;
+
+        if (window.calendarState.selectedMonth > 11) {
+            window.calendarState.selectedMonth = 0;
+            window.calendarState.selectedYear++;
+        } else if (window.calendarState.selectedMonth < 0) {
+            window.calendarState.selectedMonth = 11;
+            window.calendarState.selectedYear--;
+        }
+
+        window.calendarState.selectedDate = null; // Clear selection when changing month
+        this.renderContent();
     },
 
     /**
