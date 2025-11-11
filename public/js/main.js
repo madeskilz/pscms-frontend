@@ -3,6 +3,8 @@
  * Coordinates database initialization and UI rendering
  */
 
+import UI from './ui.js';
+
 (async function() {
   console.log('[APP] Starting application...');
 

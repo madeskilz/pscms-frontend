@@ -3,6 +3,14 @@
  * Handles all UI rendering and interactions
  */
 
+// Import page modules
+import { renderAdmissionsPage } from './pages/admissions.js';
+import { renderCalendarPage } from './pages/calendar.js';
+import { renderPTAPage } from './pages/pta.js';
+import { renderParentsPage } from './pages/parents.js';
+import { renderResourcesPage } from './pages/resources.js';
+import { renderFAQsPage } from './pages/faqs.js';
+
 const UI = {
   currentView: 'public',
   currentUser: null,
@@ -663,19 +671,19 @@ const UI = {
             <div class="quick-link-icon" style="background: var(--primary-color);">📚</div>
             <h3>Admissions</h3>
             <p>Enrollment steps and requirements for new students.</p>
-            <a href="#/posts" data-route="/posts" class="card-link">Learn More →</a>
+            <a href="#/admissions" data-route="/admissions" class="card-link">Learn More →</a>
           </div>
           <div class="quick-link-card">
             <div class="quick-link-icon" style="background: var(--secondary-color);">📅</div>
             <h3>Calendar</h3>
             <p>Key dates, events, and academic schedules.</p>
-            <a href="#/posts" data-route="/posts" class="card-link">View Calendar →</a>
+            <a href="#/calendar" data-route="/calendar" class="card-link">View Calendar →</a>
           </div>
           <div class="quick-link-card">
             <div class="quick-link-icon" style="background: #28a745;">🤝</div>
             <h3>PTA</h3>
             <p>Parent-Teacher Association news and updates.</p>
-            <a href="#/posts" data-route="/posts" class="card-link">Join PTA →</a>
+            <a href="#/pta" data-route="/pta" class="card-link">Join PTA →</a>
           </div>
         </div>
       </section>
@@ -820,10 +828,12 @@ const UI = {
       // Special handling for rich pages
       if (slug === 'about') return this.renderAboutPage();
       if (slug === 'contact') return this.renderContactPage();
-      if (slug === 'admissions') return this.renderAdmissionsPage();
-      if (slug === 'calendar') return this.renderCalendarPage();
-      if (slug === 'pta') return this.renderPTAPage();
-      if (slug === 'parents') return this.renderParentsPage();
+      if (slug === 'admissions') return renderAdmissionsPage(db);
+      if (slug === 'calendar') return renderCalendarPage(db);
+      if (slug === 'pta') return renderPTAPage(db);
+      if (slug === 'parents') return renderParentsPage(db);
+      if (slug === 'resources') return renderResourcesPage(db);
+      if (slug === 'faqs') return renderFAQsPage(db);
 
       // Default page rendering
     const page = db.queryOne(
@@ -1055,10 +1065,10 @@ const UI = {
     `;
     },
 
-    /**
-     * Render Admissions page - Modern list view
-     */
-    renderAdmissionsPage() {
+  /**
+   * Handle form submissions
+   */
+  async handleFormSubmit(formType, form) {
         // Get all pages of type 'page' with 'admission' in slug or title
         const admissionPages = db.queryAll(
             `SELECT id, title, slug, content, created_at, updated_at 
@@ -1167,10 +1177,11 @@ const UI = {
     `;
     },
 
-    /**
-     * Render Calendar page - Modern events list view
-     */
-    renderCalendarPage() {
+  /**
+   * Handle form submissions
+   */
+  async handleFormSubmit(formType, form) {
+    const formData = new FormData(form);
         // Get all posts ordered by date
         const allPosts = db.queryAll(
             'SELECT id, title, slug, content, created_at, updated_at FROM posts WHERE status = ? ORDER BY created_at DESC LIMIT 50',
@@ -1260,172 +1271,445 @@ const UI = {
     },
 
     /**
-     * Render PTA page
+     * Render PTA page - Modern list view
      */
     renderPTAPage() {
-        const data = db.queryOne('SELECT value FROM settings WHERE key = ?', ['pta_page']);
-        let pta = { hero: {}, mission: '', leadership: [], benefits: [], upcomingMeetings: [], initiatives: [] };
-        try {
-            if (data) pta = JSON.parse(data.value);
-        } catch (e) { }
+        // Query PTA-related posts from database
+        const ptaPosts = db.queryAll(
+            `SELECT * FROM posts WHERE status = ? AND (type = ? OR slug LIKE ? OR title LIKE ? OR content LIKE ?) ORDER BY created_at DESC`,
+            ['published', 'page', '%pta%', '%PTA%', '%Parent-Teacher%']
+        );
 
         return `
       <div class="page-container pta-page">
         <div class="page-header">
-          <h1>${pta.hero?.title || 'Parent-Teacher Association'}</h1>
-          <p class="page-subtitle">${pta.hero?.subtitle || ''}</p>
+          <h1>🤝 Parent-Teacher Association</h1>
+          <p class="page-subtitle">Building strong partnerships between home and school</p>
         </div>
 
-        ${pta.mission ? `
-          <section class="mission-section">
-            <div class="section-icon">🤝</div>
-            <p class="mission-text">${pta.mission}</p>
-          </section>
-        ` : ''}
+        <!-- Info Cards -->
+        <div class="info-cards-grid">
+          <div class="info-card gradient-blue">
+            <div class="info-card-icon">👥</div>
+            <h3>Community</h3>
+            <p>Join our vibrant community of engaged parents and dedicated teachers working together.</p>
+          </div>
+          <div class="info-card gradient-purple">
+            <div class="info-card-icon">📅</div>
+            <h3>Events</h3>
+            <p>Regular meetings, workshops, and social events to connect and collaborate.</p>
+          </div>
+          <div class="info-card gradient-green">
+            <div class="info-card-icon">💡</div>
+            <h3>Initiatives</h3>
+            <p>Drive positive change through fundraisers, programs, and school improvements.</p>
+          </div>
+          <div class="info-card gradient-orange">
+            <div class="info-card-icon">🎯</div>
+            <h3>Impact</h3>
+            <p>Make a meaningful difference in your child's educational journey and school experience.</p>
+          </div>
+        </div>
 
-        ${pta.leadership && pta.leadership.length > 0 ? `
+        <!-- PTA Posts/Updates -->
+        ${ptaPosts.length > 0 ? `
           <section class="content-section">
-            <h2>PTA Leadership</h2>
-            <div class="leadership-grid">
-              ${pta.leadership.map(leader => `
-                <div class="leader-card">
-                  <div class="leader-icon">👤</div>
-                  <h3>${leader.position}</h3>
-                  <p class="leader-name">${leader.name}</p>
-                  <p>📧 <a href="mailto:${leader.email}">${leader.email}</a></p>
-                  <p>📞 ${leader.phone}</p>
-                </div>
-              `).join('')}
+            <h2>PTA News & Updates</h2>
+            <div class="modern-list">
+              ${ptaPosts.map(post => {
+                const excerpt = post.excerpt || (post.content ? post.content.substring(0, 150) + '...' : '');
+                const postDate = new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                return `
+                  <div class="modern-list-item">
+                    <div class="list-item-icon">📄</div>
+                    <div class="list-item-content">
+                      <h3><a href="#/posts/${post.slug}" data-route="/posts/${post.slug}">${post.title}</a></h3>
+                      <p class="list-item-meta">${postDate}</p>
+                      ${excerpt ? `<p class="list-item-excerpt">${excerpt}</p>` : ''}
+                      <a href="#/posts/${post.slug}" data-route="/posts/${post.slug}" class="read-more-link">Read More →</a>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
             </div>
           </section>
         ` : ''}
 
-        <div class="two-column-section">
-          ${pta.benefits && pta.benefits.length > 0 ? `
-            <section class="content-card">
-              <h3>✨ Membership Benefits</h3>
-              <ul class="benefits-list">
-                ${pta.benefits.map(benefit => `<li>${benefit}</li>`).join('')}
-              </ul>
-            </section>
-          ` : ''}
-
-          ${pta.initiatives && pta.initiatives.length > 0 ? `
-            <section class="content-card">
-              <h3>🎯 Current Initiatives</h3>
-              <ul class="benefits-list">
-                ${pta.initiatives.map(initiative => `<li>${initiative}</li>`).join('')}
-              </ul>
-            </section>
-          ` : ''}
-        </div>
-
-        ${pta.upcomingMeetings && pta.upcomingMeetings.length > 0 ? `
-          <section class="content-section">
-            <h2>Upcoming Meetings</h2>
-            <div class="meetings-list">
-              ${pta.upcomingMeetings.map(meeting => `
-                <div class="meeting-card">
-                  <div class="meeting-date">
-                    <div class="date-icon">📅</div>
-                    <div>${meeting.date}</div>
-                    <div class="meeting-time">${meeting.time}</div>
-                  </div>
-                  <div class="meeting-details">
-                    <h3>${meeting.venue}</h3>
-                    <p><strong>Agenda:</strong> ${meeting.agenda}</p>
-                  </div>
-                </div>
-              `).join('')}
+        <!-- Membership Benefits -->
+        <section class="content-section">
+          <h2>Membership Benefits</h2>
+          <div class="process-steps-modern">
+            <div class="step-card">
+              <div class="step-number-modern gradient-blue">1</div>
+              <h3>Stay Informed</h3>
+              <p>Get regular updates about school activities, events, and important announcements.</p>
             </div>
-          </section>
-        ` : ''}
+            <div class="step-card">
+              <div class="step-number-modern gradient-purple">2</div>
+              <h3>Network & Connect</h3>
+              <p>Meet other parents, build friendships, and create a supportive community network.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern gradient-green">3</div>
+              <h3>Influence Decisions</h3>
+              <p>Have a voice in school policies, programs, and initiatives that affect your children.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern gradient-orange">4</div>
+              <h3>Support Excellence</h3>
+              <p>Contribute to fundraising efforts and programs that enhance educational quality.</p>
+            </div>
+          </div>
+        </section>
 
-        <section class="cta-section">
-          <h2>Join the PTA Today!</h2>
-          <p>Be part of our community and make a difference in your child's education.</p>
-          <a href="#/contact" data-route="/contact" class="btn-primary">Get Involved</a>
+        <!-- CTA Section -->
+        <section class="cta-section-modern">
+          <div class="cta-content">
+            <h2>Join the PTA Today!</h2>
+            <p>Be part of our community and make a difference in your child's education. Together, we can create an even better learning environment.</p>
+          </div>
+          <div class="cta-buttons">
+            <a href="#/contact" data-route="/contact" class="btn-primary-modern">Get Involved</a>
+            <a href="#/calendar" data-route="/calendar" class="btn-secondary-modern">View Events</a>
+          </div>
         </section>
       </div>
     `;
     },
 
     /**
-     * Render Parents page
+     * Render Parents page - Modern hub for parent resources
      */
     renderParentsPage() {
-        const data = db.queryOne('SELECT value FROM settings WHERE key = ?', ['parents_page']);
-        let parents = { hero: {}, quickLinks: [], resources: [], faqs: [], importantContacts: [] };
-        try {
-            if (data) parents = JSON.parse(data.value);
-        } catch (e) { }
+        // Query parent-related posts
+        const parentPosts = db.queryAll(
+            `SELECT * FROM posts WHERE status = ? AND (slug LIKE ? OR title LIKE ? OR content LIKE ?) ORDER BY created_at DESC LIMIT 10`,
+            ['published', '%parent%', '%Parent%', '%parent%']
+        );
 
         return `
       <div class="page-container parents-page">
         <div class="page-header">
-          <h1>${parents.hero?.title || 'For Parents'}</h1>
-          <p class="page-subtitle">${parents.hero?.subtitle || ''}</p>
+          <h1>👨‍👩‍👧‍👦 For Parents</h1>
+          <p class="page-subtitle">Resources, guides, and information to support your child's learning journey</p>
         </div>
 
-        ${parents.quickLinks && parents.quickLinks.length > 0 ? `
+        <!-- Quick Access Cards -->
+        <div class="info-cards-grid">
+          <div class="info-card gradient-blue">
+            <div class="info-card-icon">📚</div>
+            <h3>Resources</h3>
+            <p>Access guides, handbooks, and helpful materials for parents.</p>
+            <a href="#/resources" data-route="/resources" class="card-link-white">View Resources →</a>
+          </div>
+          <div class="info-card gradient-purple">
+            <div class="info-card-icon">❓</div>
+            <h3>FAQs</h3>
+            <p>Find answers to commonly asked questions about school policies and procedures.</p>
+            <a href="#/faqs" data-route="/faqs" class="card-link-white">View FAQs →</a>
+          </div>
+          <div class="info-card gradient-green">
+            <div class="info-card-icon">🤝</div>
+            <h3>PTA</h3>
+            <p>Join the Parent-Teacher Association and get involved in school activities.</p>
+            <a href="#/pta" data-route="/pta" class="card-link-white">Join PTA →</a>
+          </div>
+          <div class="info-card gradient-orange">
+            <div class="info-card-icon">📞</div>
+            <h3>Contact</h3>
+            <p>Reach out to teachers, staff, and administration for support.</p>
+            <a href="#/contact" data-route="/contact" class="card-link-white">Contact Us →</a>
+          </div>
+        </div>
+
+        <!-- Parent Updates -->
+        ${parentPosts.length > 0 ? `
           <section class="content-section">
-            <h2>Quick Links</h2>
-            <div class="quick-links-grid">
-              ${parents.quickLinks.map(link => `
-                <a href="${link.link}" class="parent-link-card">
-                  <div class="link-icon">${link.icon}</div>
-                  <h3>${link.title}</h3>
-                  <p>${link.description}</p>
-                </a>
-              `).join('')}
+            <h2>Parent Updates & News</h2>
+            <div class="modern-list">
+              ${parentPosts.map(post => {
+                const excerpt = post.excerpt || (post.content ? post.content.substring(0, 150) + '...' : '');
+                const postDate = new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                return `
+                  <div class="modern-list-item">
+                    <div class="list-item-icon">📄</div>
+                    <div class="list-item-content">
+                      <h3><a href="#/posts/${post.slug}" data-route="/posts/${post.slug}">${post.title}</a></h3>
+                      <p class="list-item-meta">${postDate}</p>
+                      ${excerpt ? `<p class="list-item-excerpt">${excerpt}</p>` : ''}
+                      <a href="#/posts/${post.slug}" data-route="/posts/${post.slug}" class="read-more-link">Read More →</a>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
             </div>
           </section>
         ` : ''}
 
-        ${parents.resources && parents.resources.length > 0 ? `
+        <!-- Key Information -->
+        <section class="content-section">
+          <h2>Essential Parent Information</h2>
+          <div class="process-steps-modern">
+            <div class="step-card">
+              <div class="step-number-modern gradient-blue">📖</div>
+              <h3>Parent Handbook</h3>
+              <p>Comprehensive guide covering school policies, procedures, and expectations.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern gradient-purple">📅</div>
+              <h3>School Calendar</h3>
+              <p>Important dates, holidays, events, and academic schedules for the year.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern gradient-green">💳</div>
+              <h3>Payment Portal</h3>
+              <p>Secure online payment system for tuition, fees, and other school expenses.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern gradient-orange">📊</div>
+              <h3>Progress Reports</h3>
+              <p>Access your child's academic progress, attendance, and performance reports.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section-modern">
+          <div class="cta-content">
+            <h2>Need Help or Support?</h2>
+            <p>Our team is here to assist you. Reach out to us with any questions or concerns about your child's education.</p>
+          </div>
+          <div class="cta-buttons">
+            <a href="#/contact" data-route="/contact" class="btn-primary-modern">Contact School</a>
+            <a href="#/faqs" data-route="/faqs" class="btn-secondary-modern">View FAQs</a>
+          </div>
+        </section>
+      </div>
+    `;
+    },
+
+    /**
+     * Render Resources page - Document library and downloads
+     */
+    renderResourcesPage() {
+        // Query resource-related posts
+        const resourcePosts = db.queryAll(
+            `SELECT * FROM posts WHERE status = ? AND (slug LIKE ? OR title LIKE ? OR content LIKE ?) ORDER BY created_at DESC`,
+            ['published', '%resource%', '%Resource%', '%handbook%']
+        );
+
+        return `
+      <div class="page-container resources-page">
+        <div class="page-header">
+          <h1>📚 Resources & Downloads</h1>
+          <p class="page-subtitle">Handbooks, guides, forms, and helpful documents for students and parents</p>
+        </div>
+
+        <!-- Resource Categories -->
+        <div class="info-cards-grid">
+          <div class="info-card gradient-blue">
+            <div class="info-card-icon">📖</div>
+            <h3>Handbooks</h3>
+            <p>Student handbook, parent handbook, and policy documents.</p>
+          </div>
+          <div class="info-card gradient-purple">
+            <div class="info-card-icon">📝</div>
+            <h3>Forms</h3>
+            <p>Download permission slips, enrollment forms, and other required documents.</p>
+          </div>
+          <div class="info-card gradient-green">
+            <div class="info-card-icon">📊</div>
+            <h3>Reports</h3>
+            <p>Academic calendars, newsletters, and school performance reports.</p>
+          </div>
+          <div class="info-card gradient-orange">
+            <div class="info-card-icon">📧</div>
+            <h3>Templates</h3>
+            <p>Letter templates, project guidelines, and study resources.</p>
+          </div>
+        </div>
+
+        <!-- Resource Documents -->
+        ${resourcePosts.length > 0 ? `
           <section class="content-section">
-            <h2>Parent Resources</h2>
-            <div class="resources-grid">
-              ${parents.resources.map(resource => `
-                <div class="resource-card">
-                  <h3>${resource.category}</h3>
-                  <ul>
-                    ${resource.items.map(item => `<li>${item}</li>`).join('')}
-                  </ul>
-                </div>
-              `).join('')}
+            <h2>Available Resources</h2>
+            <div class="modern-list">
+              ${resourcePosts.map(post => {
+                const excerpt = post.excerpt || (post.content ? post.content.substring(0, 150) + '...' : '');
+                const postDate = new Date(post.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                return `
+                  <div class="modern-list-item">
+                    <div class="list-item-icon">📄</div>
+                    <div class="list-item-content">
+                      <h3><a href="#/posts/${post.slug}" data-route="/posts/${post.slug}">${post.title}</a></h3>
+                      <p class="list-item-meta">${postDate}</p>
+                      ${excerpt ? `<p class="list-item-excerpt">${excerpt}</p>` : ''}
+                      <a href="#/posts/${post.slug}" data-route="/posts/${post.slug}" class="read-more-link">View Resource →</a>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </section>
+        ` : `
+          <section class="content-section">
+            <div class="empty-state">
+              <p>📁 No resources available at this time. Check back soon for handbooks, forms, and guides.</p>
+            </div>
+          </section>
+        `}
+
+        <!-- Common Resources -->
+        <section class="content-section">
+          <h2>Commonly Requested Documents</h2>
+          <div class="process-steps-modern">
+            <div class="step-card">
+              <div class="step-number-modern gradient-blue">📖</div>
+              <h3>Student Handbook</h3>
+              <p>Comprehensive guide to school policies, rules, and expectations for students.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern gradient-purple">👨‍👩‍👧</div>
+              <h3>Parent Handbook</h3>
+              <p>Essential information for parents about school operations and involvement.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern gradient-green">📅</div>
+              <h3>Academic Calendar</h3>
+              <p>Important dates, holidays, exam schedules, and school events for the year.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number-modern gradient-orange">📝</div>
+              <h3>Enrollment Forms</h3>
+              <p>Applications and forms needed for new student registration and enrollment.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA -->
+        <section class="cta-section-modern">
+          <div class="cta-content">
+            <h2>Need a Specific Document?</h2>
+            <p>Can't find what you're looking for? Contact our office and we'll help you get the documents you need.</p>
+          </div>
+          <div class="cta-buttons">
+            <a href="#/contact" data-route="/contact" class="btn-primary-modern">Contact Office</a>
+            <a href="#/parents" data-route="/parents" class="btn-secondary-modern">Parent Portal</a>
+          </div>
+        </section>
+      </div>
+    `;
+    },
+
+    /**
+     * Render FAQs page - Frequently Asked Questions
+     */
+    renderFAQsPage() {
+        // Query FAQ-related posts
+        const faqPosts = db.queryAll(
+            `SELECT * FROM posts WHERE status = ? AND (slug LIKE ? OR title LIKE ? OR content LIKE ?) ORDER BY created_at DESC`,
+            ['published', '%faq%', '%FAQ%', '%question%']
+        );
+
+        return `
+      <div class="page-container faqs-page">
+        <div class="page-header">
+          <h1>❓ Frequently Asked Questions</h1>
+          <p class="page-subtitle">Find answers to common questions about our school, programs, and policies</p>
+        </div>
+
+        <!-- FAQ Categories -->
+        <div class="info-cards-grid">
+          <div class="info-card gradient-blue">
+            <div class="info-card-icon">🎓</div>
+            <h3>Admissions</h3>
+            <p>Questions about enrollment, requirements, and application process.</p>
+          </div>
+          <div class="info-card gradient-purple">
+            <div class="info-card-icon">📚</div>
+            <h3>Academics</h3>
+            <p>Information about curriculum, exams, and academic programs.</p>
+          </div>
+          <div class="info-card gradient-green">
+            <div class="info-card-icon">💳</div>
+            <h3>Fees & Payment</h3>
+            <p>Details about tuition, payment schedules, and financial aid.</p>
+          </div>
+          <div class="info-card gradient-orange">
+            <div class="info-card-icon">🏫</div>
+            <h3>School Life</h3>
+            <p>Questions about facilities, activities, and daily operations.</p>
+          </div>
+        </div>
+
+        <!-- FAQ Posts -->
+        ${faqPosts.length > 0 ? `
+          <section class="content-section">
+            <h2>Questions & Answers</h2>
+            <div class="faq-list-modern">
+              ${faqPosts.map((post, index) => {
+                const excerpt = post.excerpt || (post.content ? post.content.substring(0, 200) + '...' : '');
+                return `
+                  <div class="faq-item-modern">
+                    <div class="faq-number">${String(index + 1).padStart(2, '0')}</div>
+                    <div class="faq-content">
+                      <h3 class="faq-question">Q: ${post.title}</h3>
+                      ${excerpt ? `<p class="faq-answer">A: ${excerpt}</p>` : ''}
+                      <a href="#/posts/${post.slug}" data-route="/posts/${post.slug}" class="read-more-link">Read Full Answer →</a>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
             </div>
           </section>
         ` : ''}
 
-        ${parents.faqs && parents.faqs.length > 0 ? `
-          <section class="content-section faqs-section">
-            <h2>Frequently Asked Questions</h2>
-            <div class="faqs-list">
-              ${parents.faqs.map(faq => `
-                <div class="faq-item">
-                  <h3>Q: ${faq.question}</h3>
-                  <p>A: ${faq.answer}</p>
-                </div>
-              `).join('')}
+        <!-- Common FAQs -->
+        <section class="content-section">
+          <h2>Most Common Questions</h2>
+          <div class="faq-list-modern">
+            <div class="faq-item-modern">
+              <div class="faq-number">01</div>
+              <div class="faq-content">
+                <h3 class="faq-question">Q: What are the admission requirements?</h3>
+                <p class="faq-answer">A: Admission requirements include completed application form, birth certificate, previous school records, passport photographs, and entrance examination. Visit our <a href="#/admissions" data-route="/admissions">Admissions page</a> for detailed information.</p>
+              </div>
             </div>
-          </section>
-        ` : ''}
+            <div class="faq-item-modern">
+              <div class="faq-number">02</div>
+              <div class="faq-content">
+                <h3 class="faq-question">Q: What is the school's operating schedule?</h3>
+                <p class="faq-answer">A: School hours are Monday-Friday, 8:00 AM to 3:00 PM. Extended care is available from 3:00 PM to 5:00 PM for an additional fee. Check our <a href="#/calendar" data-route="/calendar">Calendar</a> for specific dates and holidays.</p>
+              </div>
+            </div>
+            <div class="faq-item-modern">
+              <div class="faq-number">03</div>
+              <div class="faq-content">
+                <h3 class="faq-question">Q: How can I pay school fees?</h3>
+                <p class="faq-answer">A: We accept bank transfers, online payments through our portal, and in-person payments at the school's accounts office. Payment plans are available upon request. Contact our accounts department for details.</p>
+              </div>
+            </div>
+            <div class="faq-item-modern">
+              <div class="faq-number">04</div>
+              <div class="faq-content">
+                <h3 class="faq-question">Q: Does the school provide transportation?</h3>
+                <p class="faq-answer">A: Yes, we offer school bus services covering major areas within Lagos. Transport fees are separate from tuition and vary by distance. Contact us for route information and pricing.</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
-        ${parents.importantContacts && parents.importantContacts.length > 0 ? `
-          <section class="content-section">
-            <h2>Important Contacts</h2>
-            <div class="contacts-grid">
-              ${parents.importantContacts.map(contact => `
-                <div class="contact-card-mini">
-                  <h3>${contact.department}</h3>
-                  <p>📞 ${contact.contact}</p>
-                  <p>📧 <a href="mailto:${contact.email}">${contact.email}</a></p>
-                </div>
-              `).join('')}
-            </div>
-          </section>
-        ` : ''}
+        <!-- CTA -->
+        <section class="cta-section-modern">
+          <div class="cta-content">
+            <h2>Still Have Questions?</h2>
+            <p>Don't see your question here? Our staff is ready to help you with any inquiries about our school.</p>
+          </div>
+          <div class="cta-buttons">
+            <a href="#/contact" data-route="/contact" class="btn-primary-modern">Ask a Question</a>
+            <a href="#/admissions" data-route="/admissions" class="btn-secondary-modern">Admissions Info</a>
+          </div>
+        </section>
       </div>
     `;
     },
@@ -1603,3 +1887,8 @@ const UI = {
     }
   }
 };
+
+export default UI;
+
+
+export default UI;

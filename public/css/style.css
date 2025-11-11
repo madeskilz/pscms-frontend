@@ -2170,6 +2170,102 @@ body {
   color: white;
 }
 
+.card-link-white {
+  display: inline-block;
+  margin-top: 1rem;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 1.05rem;
+  transition: all 0.3s;
+  position: relative;
+  z-index: 1;
+}
+
+.card-link-white:hover {
+  transform: translateX(5px);
+  text-decoration: underline;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+
+.empty-state p {
+  color: #888;
+  font-size: 1.1rem;
+}
+
+/* FAQ Modern Styles */
+.faq-list-modern {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.faq-item-modern {
+  display: flex;
+  gap: 2rem;
+  padding: 2.5rem;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.faq-item-modern:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1), 0 12px 32px rgba(0,0,0,0.08);
+}
+
+.faq-number {
+  font-size: 2.5rem;
+  font-weight: 800;
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+  min-width: 60px;
+  text-align: center;
+}
+
+.faq-content {
+  flex: 1;
+}
+
+.faq-question {
+  font-size: 1.3rem;
+  color: #2c3e50;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.faq-answer {
+  color: #5a5a5a;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  font-size: 1.05rem;
+}
+
+.faq-answer a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s;
+}
+
+.faq-answer a:hover {
+  color: var(--secondary-color);
+  text-decoration: underline;
+}
+
 .modern-list {
   display: grid;
   gap: 2rem;
@@ -3619,6 +3715,17 @@ body {
   .modern-list-item {
     flex-direction: column;
     padding: 2rem;
+  }
+
+  .faq-item-modern {
+    flex-direction: column;
+    padding: 2rem;
+    gap: 1rem;
+  }
+
+  .faq-number {
+    font-size: 2rem;
+    text-align: left;
   }
 
   .list-item-icon {
