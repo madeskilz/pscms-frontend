@@ -815,6 +815,33 @@ body {
   margin-bottom: 2rem;
 }
 
+/* Improved admin branding */
+.dashboard-brand, .admin-brand-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logo-img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+}
+
+.admin-brand-text h2, .dashboard-title h1 {
+  margin: 0;
+  color: var(--dark-color);
+  font-size: 1.25rem;
+}
+
+.admin-brand-text small {
+  display: block;
+  color: #777;
+  font-size: 0.85rem;
+}
+
 .dashboard-greeting {
   color: #666;
   font-size: 1rem;

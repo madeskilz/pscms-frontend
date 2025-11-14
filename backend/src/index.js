@@ -20,6 +20,12 @@ fs.mkdirSync(uploadDir, { recursive: true });
 // Static media route
 app.use('/media', express.static(uploadDir));
 
+// Serve project data (including sqlite DB) to allow static client to load the file
+const dataDir = path.resolve(__dirname, '../../data');
+if (fs.existsSync(dataDir)) {
+    app.use('/db', express.static(dataDir));
+}
+
 // API Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/posts', require('./routes/posts'));

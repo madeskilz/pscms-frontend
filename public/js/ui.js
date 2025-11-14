@@ -15,6 +15,7 @@ const UI = {
   currentView: 'public',
   currentUser: null,
   sessionToken: null, // In-memory only - no localStorage
+    serverAvailable: false,
 
   /**
    * Initialize UI
@@ -24,9 +25,20 @@ const UI = {
     // No localStorage used for admin authentication
     this.currentUser = null;
     this.sessionToken = null;
+      // Probe backend availability in background
+      this.checkServerAvailability();
     this.setupEventListeners();
     this.render();
   },
+
+    checkServerAvailability(timeout = 1500) {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        fetch('/health', { signal: controller.signal }).then(r => {
+            clearTimeout(id);
+            if (r.ok) this.serverAvailable = true;
+        }).catch(() => { this.serverAvailable = false; });
+    },
 
   /**
    * Setup global event listeners
@@ -134,7 +146,7 @@ const UI = {
     try { siteTitle = siteTitleRow ? JSON.parse(siteTitleRow.value) : siteTitle; } catch (e) {}
     const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
     let logoHtml = '<div class="logo-box">A</div>';
-    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `< img src = "${logo.data}" alt = "${siteTitle} logo" class="logo-img" />`; } } catch (e) {}
+    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `<img src="${logo.data}" alt="${siteTitle} logo" class="logo-img" />`; } } catch (e) {}
 
     const nav = `
       <nav class="admin-nav">
@@ -211,7 +223,7 @@ const UI = {
     try { siteTitle = siteTitleRow ? JSON.parse(siteTitleRow.value) : siteTitle; } catch (e) {}
     const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
     let logoHtml = '<div class="logo-box">A</div>';
-    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `< img src = "${logo.data}" alt = "${siteTitle} logo" class="logo-img" />`; } } catch (e) {}
+    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `<img src="${logo.data}" alt="${siteTitle} logo" class="logo-img" />`; } } catch (e) {}
 
     return `
       <div class="dashboard">
@@ -223,9 +235,7 @@ const UI = {
           </div>
         </div>
         
-        <div class="alert-warning">
-          <strong>⚠️ FILE-ONLY MODE:</strong> Changes exist in memory only. Export database regularly to save your work!
-        </div>
+        <!--File - only warning removed: admin operates live when backend is available-- >
 
         <div class="dashboard-analytics">
           <div class="stat-card stat-primary">
@@ -475,10 +485,15 @@ const UI = {
       if (logoRow) {
         const logo = JSON.parse(logoRow.value);
         if (logo?.data) {
-          logoPreviewHtml = `< div class="logo-preview" > <img src="${logo.data}" alt="logo" style="max-width:160px;max-height:80px;object-fit:contain" /></div >`;
+          logoPreviewHtml = `<div class="logo-preview"><img src="${logo.data}" alt="logo" style="max-width:160px;max-height:80px;object-fit:contain" class="logo-img"/></div>`;
         }
       }
     } catch (e) {}
+
+    // Contact info (editable)
+    const contactRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['contact_page']);
+    let contactData = { phone: '', email: '', address: '' };
+    try { if (contactRow) contactData = JSON.parse(contactRow.value); } catch (e) {}
 
     return `
       <div class="settings">
@@ -506,6 +521,21 @@ const UI = {
               <option value="colorlib-education" ${themeValue === 'colorlib-education' ? 'selected' : ''}>Colorlib Education</option>
               <option value="colorlib-fresh" ${themeValue === 'colorlib-fresh' ? 'selected' : ''}>Colorlib Fresh</option>
             </select>
+          </div>
+
+          <div class="form-group">
+            <label for="contact_address">Contact Address</label>
+            <input type="text" id="contact_address" name="contact_address" value="${(contactData.address||'').replace(/"/g,'&quot;')}">
+          </div>
+
+          <div class="form-group">
+            <label for="contact_phone">Contact Phone</label>
+            <input type="text" id="contact_phone" name="contact_phone" value="${(contactData.phone||'').replace(/"/g,'&quot;')}">
+          </div>
+
+          <div class="form-group">
+            <label for="contact_email">Contact Email</label>
+            <input type="email" id="contact_email" name="contact_email" value="${(contactData.email||'').replace(/"/g,'&quot;')}">
           </div>
 
           <div class="form-actions">
@@ -596,7 +626,7 @@ const UI = {
     try { title = siteTitle ? JSON.parse(siteTitle.value) : title; } catch (e) {}
     const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
     let logoHtml = '<div class="logo-box">S</div>';
-    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `< img src = "${logo.data}" alt = "${title} logo" class="logo-img" />`; } } catch (e) {}
+    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `<img src="${logo.data}" alt="${title} logo" class="logo-img" />`; } } catch (e) {}
 
     const currentYear = new Date().getFullYear();
 
@@ -635,9 +665,9 @@ const UI = {
             <div class="footer-section">
               <h4>Contact Us</h4>
               <div class="footer-contact">
-                <a href="mailto:info@school.test">📧 info@school.test</a>
-                <p>📞 +234 (0) 123 456 7890</p>
-                <p>📍 Lagos, Nigeria</p>
+                <a href="mailto:${(contactData.email||'info@school.test')}">📧 ${(contactData.email||'info@school.test')}</a>
+                <p>📞 ${(contactData.phone||'+234 (0) 123 456 7890')}</p>
+                <p>📍 ${(contactData.address||'Lagos, Nigeria')}</p>
               </div>
             </div>
           </div>
@@ -1255,9 +1285,43 @@ const UI = {
     if (formType === 'login') {
       const email = formData.get('email');
       const password = formData.get('password');
-      
-      const user = db.queryOne('SELECT * FROM users WHERE email = ?', [email]);
-      
+
+        // Try server-side authentication first (preferred)
+        try {
+            const resp = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
+
+            if (resp.ok) {
+                const body = await resp.json();
+                const accessToken = body.accessToken;
+                // Fetch user info from server
+                const me = await fetch('/api/auth/me', { headers: { Authorization: `Bearer ${accessToken}` } });
+                if (me.ok) {
+                    const userInfo = await me.json();
+                    this.currentUser = {
+                        id: userInfo.id,
+                        email: userInfo.email,
+                        display_name: userInfo.display_name,
+                        role: userInfo.role_id,
+                        capabilities: userInfo.capabilities || []
+                    };
+                    // Store access token in-memory for this session
+                    this.sessionToken = accessToken;
+                    console.log('[AUTH] ✓ Logged in via server');
+                    this.navigate('/admin');
+                    return;
+                }
+            }
+        } catch (err) {
+            // Network or CORS error - fall back to local DB check
+            console.warn('[AUTH] Server login failed, falling back to local DB:', err && err.message);
+        }
+
+        // Fallback: local in-memory DB auth (for file-only demo)
+        const user = db.queryOne('SELECT * FROM users WHERE email = ?', [email]);
       if (user) {
         const passwordHash = await db._simpleHash(password);
         if (user.password_hash === passwordHash) {
@@ -1269,10 +1333,9 @@ const UI = {
             role: role?.name,
             capabilities: role ? JSON.parse(role.capabilities || '[]') : []
           };
-          // Store in memory only - no localStorage
           this.currentUser = session;
           this.sessionToken = crypto.randomUUID();
-          console.log('[AUTH] ✓ Logged in - session exists in memory only');
+            console.log('[AUTH] ✓ Logged in (local-only demo)');
           console.log('[AUTH] ⚠️  You will be logged out on page refresh');
           this.navigate('/admin');
         } else {
@@ -1294,6 +1357,31 @@ const UI = {
         author_id: this.currentUser?.id || 1
       };
 
+        // Prefer server API when available
+        if (this.serverAvailable) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+                let resp;
+                if (id) {
+                    resp = await fetch(`/api/posts/${id}`, { method: 'PUT', headers, body: JSON.stringify(data) });
+                } else {
+                    resp = await fetch('/api/posts', { method: 'POST', headers, body: JSON.stringify(data) });
+                }
+                if (resp.ok) {
+                    alert(id ? 'Post updated (server).' : 'Post created (server).');
+                    this.navigate(`/admin/${data.type}s`);
+                    return;
+                } else {
+                    console.warn('Server returned', resp.status);
+                    // fall through to local
+                }
+            } catch (e) {
+                console.warn('Server save-post failed, falling back to local:', e && e.message);
+            }
+        }
+
+        // Local fallback
       if (id) {
         db.exec(
           'UPDATE posts SET title = ?, slug = ?, content = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
@@ -1314,16 +1402,54 @@ const UI = {
     if (formType === 'save-settings') {
       const siteTitle = formData.get('site_title');
       const theme = formData.get('theme');
+      const contact_address = formData.get('contact_address') || '';
+      const contact_phone = formData.get('contact_phone') || '';
+      const contact_email = formData.get('contact_email') || '';
 
-        // Update or insert site_title
+        // Try saving via server API when available
+        if (this.serverAvailable) {
+            try {
+                const headers = {};
+                if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+
+                // Update title/theme via JSON API
+                const body = { site_title: siteTitle, theme: { active: theme }, contact_page: { address: contact_address, phone: contact_phone, email: contact_email } };
+                const resp = await fetch('/api/settings', { method: 'PUT', headers: Object.assign({ 'Content-Type': 'application/json' }, headers), body: JSON.stringify(body) });
+                if (resp.ok) {
+                    // If a logo file is present, upload it using multipart
+                    const logoFile = formData.get('logo_file');
+                    if (logoFile && logoFile.size) {
+                        try {
+                            const fd = new FormData(); fd.append('file', logoFile);
+                            const headers2 = {};
+                            if (this.sessionToken) headers2['Authorization'] = `Bearer ${this.sessionToken}`;
+                            const r2 = await fetch('/api/settings/logo', { method: 'POST', body: fd, headers: headers2 });
+                            if (!r2.ok) console.warn('Logo upload returned', r2.status);
+                        } catch (e) { console.warn('Logo upload failed:', e && e.message); }
+                    }
+                    alert('Settings saved to server');
+                    this.render();
+                    return;
+                } else {
+                    console.warn('Server settings save returned', resp.status);
+                }
+            } catch (e) {
+                console.warn('Server save-settings failed, falling back to local:', e && e.message);
+            }
+        }
+
+        // Local fallback: update settings table
         let res = db.exec('UPDATE settings SET value = ? WHERE key = ?', [JSON.stringify(siteTitle), 'site_title']);
         if (!res.changes) db.exec('INSERT INTO settings (key, value) VALUES (?, ?)', ['site_title', JSON.stringify(siteTitle)]);
 
-        // Update or insert theme
         res = db.exec('UPDATE settings SET value = ? WHERE key = ?', [JSON.stringify({ active: theme }), 'theme']);
         if (!res.changes) db.exec('INSERT INTO settings (key, value) VALUES (?, ?)', ['theme', JSON.stringify({ active: theme })]);
 
-        // Handle logo upload (stored as data URL in settings 'logo')
+        // Save contact_page
+        const contactValue = JSON.stringify({ address: contact_address, phone: contact_phone, email: contact_email });
+        res = db.exec('UPDATE settings SET value = ? WHERE key = ?', [contactValue, 'contact_page']);
+        if (!res.changes) db.exec('INSERT INTO settings (key, value) VALUES (?, ?)', ['contact_page', contactValue]);
+
         const logoFile = formData.get('logo_file');
         if (logoFile && logoFile.size) {
             const dataUrl = await new Promise((resolve) => {
@@ -1355,6 +1481,15 @@ const UI = {
     if (action === 'delete-post') {
       if (confirm('Are you sure you want to delete this post?')) {
         const id = element.getAttribute('data-id');
+          if (this.serverAvailable) {
+              try {
+                  const headers = {};
+                  if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+                  const resp = await fetch(`/api/posts/${id}`, { method: 'DELETE', headers });
+                  if (resp.ok) { this.render(); return; }
+              } catch (e) { console.warn('Server delete-post failed:', e && e.message); }
+          }
+
         db.exec('DELETE FROM posts WHERE id = ?', [id]);
         this.render();
       }
@@ -1363,6 +1498,15 @@ const UI = {
     if (action === 'delete-media') {
       if (confirm('Delete this file?')) {
         const id = element.getAttribute('data-id');
+          if (this.serverAvailable) {
+              try {
+                  const headers = {};
+                  if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+                  const resp = await fetch(`/api/media/${id}`, { method: 'DELETE', headers });
+                  if (resp.ok) { this.render(); return; }
+              } catch (e) { console.warn('Server delete-media failed:', e && e.message); }
+          }
+
         db.exec('DELETE FROM media WHERE id = ?', [id]);
         this.render();
       }
@@ -1371,6 +1515,17 @@ const UI = {
     if (action === 'upload-media') {
       const file = element.files[0];
       if (file) {
+          if (this.serverAvailable) {
+              try {
+                  const fd = new FormData();
+                  fd.append('file', file);
+                  const headers = {};
+                  if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+                  const resp = await fetch('/api/media', { method: 'POST', body: fd, headers });
+                  if (resp.ok) { this.render(); return; }
+              } catch (e) { console.warn('Server upload-media failed, falling back to client:', e && e.message); }
+          }
+
         const reader = new FileReader();
         reader.onload = (e) => {
           db.exec(
@@ -1384,6 +1539,21 @@ const UI = {
     }
 
     if (action === 'export-db') {
+        // If server available, try export via API if supported, else local export
+        if (this.serverAvailable) {
+            try {
+                const headers = {};
+                if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+                const resp = await fetch('/api/backup/export', { method: 'GET', headers });
+                if (resp.ok) {
+                    const blob = await resp.blob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = 'cms.sqlite'; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                    return;
+                }
+            } catch (e) { console.warn('Server export failed, using local export'); }
+        }
       db.export();
     }
 
@@ -1394,8 +1564,17 @@ const UI = {
       input.onchange = async (e) => {
         const file = e.target.files[0];
         if (file) {
+            if (this.serverAvailable) {
+                try {
+                    const fd = new FormData(); fd.append('file', file);
+                    const headers = {};
+                    if (this.sessionToken) headers['Authorization'] = `Bearer ${this.sessionToken}`;
+                    const resp = await fetch('/api/backup/import', { method: 'POST', body: fd, headers });
+                    if (resp.ok) { alert('Database imported on server'); this.render(); return; }
+                } catch (err) { console.warn('Server import failed, falling back to local import'); }
+            }
           await db.import(file);
-          alert('Database imported');
+            alert('Database imported (local)');
           this.render();
         }
       };
