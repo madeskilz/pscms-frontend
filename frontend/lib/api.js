@@ -141,6 +141,23 @@ export async function uploadMedia(file, accessToken) {
   return res.json();
 }
 
+export async function uploadLogo(file, accessToken) {
+    const fd = new FormData();
+    fd.append('file', file);
+    const res = await fetchWithRetry(`${API_BASE}/api/settings/logo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: fd
+    });
+    if (!res.ok) {
+        const error = new Error('Logo upload failed');
+        error.status = res.status;
+        throw error;
+    }
+    clearCache('/api/settings');
+    return res.json();
+}
+
 export async function listMedia(accessToken, page = 1) {
     return cachedFetch(`${API_BASE}/api/media?page=${page}&limit=20`, {
     headers: { Authorization: `Bearer ${accessToken}` }

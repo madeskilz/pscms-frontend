@@ -39,6 +39,9 @@ export default function AdminSettings() {
   const [accessToken, setAccessToken] = useState(null)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+    const [siteTitleValue, setSiteTitleValue] = useState('K12 School CMS')
+    const [logoPreview, setLogoPreview] = useState(null)
+    const [logoFile, setLogoFile] = useState(null)
     const [homepage, setHomepage] = useState({
         heroTitle: '',
         heroSubtitle: '',
@@ -65,15 +68,19 @@ export default function AdminSettings() {
 
     const loadSettings = async (token) => {
         try {
-            const [homepageData, postsData] = await Promise.all([
+            const [homepageData, postsData, siteTitleData, logoData] = await Promise.all([
                 getSetting('homepage'),
-                getPosts(token, 1, 'post')
-            ])
+            getPosts(token, 1, 'post'),
+            getSetting('site_title'),
+            getSetting('logo')
+        ])
             if (homepageData) {
                 setHomepage(prev => ({ ...prev, ...homepageData }))
                 setFeaturedPosts(homepageData.featuredPostIds || [])
             }
             setAllPosts(postsData?.data || [])
+            if (siteTitleData) setSiteTitleValue(siteTitleData)
+            if (logoData) setLogoPreview(logoData.url || null)
         } catch (err) {
             console.error('Failed to load settings:', err)
         } finally {
@@ -110,6 +117,31 @@ export default function AdminSettings() {
         }
     }
 
+    const handleSiteSettingsSave = async () => {
+        setSaving(true)
+        setMessage('')
+        try {
+            // Update site title
+            await updateSetting('site_title', siteTitleValue, accessToken)
+
+            // Upload logo if provided
+            if (logoFile) {
+                await import('../../lib/api').then(mod => mod.uploadLogo(logoFile, accessToken))
+                // refresh preview by reloading setting
+                const newLogo = await getSetting('logo')
+                setLogoPreview(newLogo?.url || null)
+            }
+
+            setMessage('Site settings saved')
+            setTimeout(() => setMessage(''), 3000)
+        } catch (err) {
+            console.error(err)
+            setMessage('Failed to save site settings')
+        } finally {
+            setSaving(false)
+        }
+    }
+
     const addFeature = () => {
         setHomepage(prev => ({
             ...prev,
@@ -139,6 +171,35 @@ export default function AdminSettings() {
 
   return (
     <AdminLayout title="Site Settings" backHref="/admin">
+          <Container maxWidth="lg" sx={{ py: 0 }}>
+              <Card elevation={3} sx={{ mb: 4 }}>
+                  <CardContent>
+                      <Typography variant="h5" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                          <HomeIcon color="primary" />
+                          Site Branding
+                      </Typography>
+
+                      {message && (
+                          <Alert severity={message.includes('saved') ? 'success' : 'error'} sx={{ mb: 3 }}>
+                              {message}
+                          </Alert>
+                      )}
+
+                      <Stack spacing={2}>
+                          <TextField label="Site Title" value={siteTitleValue} onChange={(e) => setSiteTitleValue(e.target.value)} fullWidth />
+                          <Box>
+                              <Typography variant="subtitle2">Site Logo</Typography>
+                              {logoPreview && <Box sx={{ my: 1 }}><img src={logoPreview} alt="logo preview" style={{ maxWidth: 160, maxHeight: 80, objectFit: 'contain' }} /></Box>}
+                              <input type="file" accept="image/*" onChange={(e) => { setLogoFile(e.target.files[0]); setLogoPreview(URL.createObjectURL(e.target.files[0])); }} />
+                          </Box>
+                          <Box>
+                              <Button variant="contained" onClick={handleSiteSettingsSave} disabled={saving}>{saving ? 'Saving...' : 'Save Branding'}</Button>
+                          </Box>
+                      </Stack>
+                  </CardContent>
+              </Card>
+
+
       <Container maxWidth="lg" sx={{ py: 0 }}>
         <Card elevation={3} sx={{ mb: 4 }}>
           <CardContent>

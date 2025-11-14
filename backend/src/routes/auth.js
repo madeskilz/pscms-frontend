@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const rateLimit = require('express-rate-limit');
 const knex = require('knex')(require('../../knexfile')[process.env.NODE_ENV || 'development']);
 const { signAccessToken, generateRefreshToken, hashToken, getRefreshExpiryDate } = require('../services/tokens');
@@ -20,7 +21,30 @@ router.post('/login', authLimiter, async (req, res) => {
   const user = await knex('users').where({ email }).first();
   if (!user) return res.status(401).json({ error: 'invalid credentials' });
   if (!user.password_hash) return res.status(401).json({ error: 'invalid credentials' });
-  const match = await bcrypt.compare(password, user.password_hash);
+    // Support bcrypt hashes (new) and legacy SHA-256 hex hashes (from static DB exports)
+    let match = false;
+    try {
+        if (user.password_hash && user.password_hash.startsWith('$2')) {
+            match = await bcrypt.compare(password, user.password_hash);
+        } else if (user.password_hash) {
+            // legacy SHA-256 hex stored in password_hash
+            const sha = crypto.createHash('sha256').update(password).digest('hex');
+            if (sha === user.password_hash) {
+                match = true;
+                // Upgrade stored hash to bcrypt for future logins
+                try {
+                    const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10);
+                    const newHash = await bcrypt.hash(password, saltRounds);
+                    await knex('users').where({ id: user.id }).update({ password_hash: newHash });
+                } catch (e) {
+                    // Non-fatal - log and continue
+                    console.warn('Failed to upgrade legacy password hash for user', user.id, e.message || e);
+                }
+            }
+        }
+    } catch (err) {
+        console.error('Password compare error:', err);
+    }
   if (!match) return res.status(401).json({ error: 'invalid credentials' });
   // Fetch capabilities from role and embed in access token
   let caps = [];
@@ -154,8 +178,26 @@ router.post('/change-password', requireAuth, async (req, res) => {
       return res.status(401).json({ error: 'Invalid user' });
     }
     
-    // Verify current password
-    const match = await bcrypt.compare(currentPassword, user.password_hash);
+      // Verify current password (support bcrypt and legacy SHA-256)
+      let match = false;
+      try {
+          if (user.password_hash && user.password_hash.startsWith('$2')) {
+              match = await bcrypt.compare(currentPassword, user.password_hash);
+          } else if (user.password_hash) {
+              const sha = crypto.createHash('sha256').update(currentPassword).digest('hex');
+              if (sha === user.password_hash) {
+                  match = true;
+                  // upgrade to bcrypt
+                  try {
+                      const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '12', 10);
+                      const newHash = await bcrypt.hash(currentPassword, saltRounds);
+                      await knex('users').where({ id: user.id }).update({ password_hash: newHash });
+                  } catch (e) { console.warn('Failed to upgrade legacy password hash during change-password', e.message || e); }
+              }
+          }
+      } catch (e) {
+          console.error('Password compare error:', e);
+      }
     if (!match) {
       return res.status(401).json({ error: 'Current password is incorrect' });
     }

@@ -76,26 +76,38 @@ const UI = {
       if (!this.currentUser) {
         this.renderLogin();
         return;
-      }
-      this.renderAdmin(hash);
-    } else {
-        await this.renderPublic(hash);
-    }
-  },
+          const siteTitleRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['site_title']);
+          let siteTitle = 'School CMS';
+          try { siteTitle = siteTitleRow ? JSON.parse(siteTitleRow.value) : siteTitle; } catch (e) { }
+          const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
+          let logoHtml = '<div class="logo-box">S</div>';
+          try {
+              if (logoRow) {
+                  const logo = JSON.parse(logoRow.value);
+                  if (logo?.data) logoHtml = `<img src="${logo.data}" alt="${siteTitle} logo" class="logo-img" />`;
+            }
+          } catch (e) { }
 
-  /**
-   * Render login page
-   */
-  renderLogin() {
-    const app = document.getElementById('app');
-    app.innerHTML = `
-      <div class="login-container">
-        <div class="login-box">
-          <h1>School CMS</h1>
-          <h2>Admin Login</h2>
-          <form data-form="login">
-            <div class="form-group">
-              <label for="email">Email</label>
+          app.innerHTML = `
+            <div class="login-container">
+              <div class="login-box">
+                <div class="login-brand">${logoHtml}<h1>${siteTitle}</h1></div>
+                <h2>Admin Login</h2>
+                <form data-form="login">
+                  <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                  </div>
+                  <button type="submit" class="btn-primary">Login</button>
+                </form>
+                <a href="#/" data-route="/" class="back-link">← Back to site</a>
+              </div>
+            </div>
+          `;
               <input type="email" id="email" name="email" required>
             </div>
             <div class="form-group">
@@ -117,10 +129,17 @@ const UI = {
     const app = document.getElementById('app');
     
     // Admin navigation
+    const siteTitleRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['site_title']);
+    let siteTitle = 'CMS Admin';
+    try { siteTitle = siteTitleRow ? JSON.parse(siteTitleRow.value) : siteTitle; } catch (e) {}
+    const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
+    let logoHtml = '<div class="logo-box">A</div>';
+    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `< img src = "${logo.data}" alt = "${siteTitle} logo" class="logo-img" />`; } } catch (e) {}
+
     const nav = `
       <nav class="admin-nav">
         <div class="admin-nav-brand">
-          <h2>CMS Admin</h2>
+          <div class="admin-brand-inner">${logoHtml}<div class="admin-brand-text"><h2>${siteTitle}</h2><small>Administrator</small></div></div>
         </div>
         <div class="admin-nav-links">
           <a href="#/admin" data-route="/admin">Dashboard</a>
@@ -187,12 +206,20 @@ const UI = {
       </tr>
     `).join('');
 
+    const siteTitleRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['site_title']);
+    let siteTitle = 'CMS Admin';
+    try { siteTitle = siteTitleRow ? JSON.parse(siteTitleRow.value) : siteTitle; } catch (e) {}
+    const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
+    let logoHtml = '<div class="logo-box">A</div>';
+    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `< img src = "${logo.data}" alt = "${siteTitle} logo" class="logo-img" />`; } } catch (e) {}
+
     return `
       <div class="dashboard">
-        <div class="dashboard-header">
-          <div>
-            <h1>CMS Admin</h1>
-            <p class="dashboard-greeting">${greeting}</p>
+        <div class="dashboard-header dashboard-header-rich">
+          <div class="dashboard-brand">${logoHtml}<div class="dashboard-title"><h1>${siteTitle}</h1><p class="dashboard-greeting">${greeting}</p></div></div>
+          <div class="dashboard-actions-top">
+            <button data-action="export-db" class="btn-outline">💾 Export</button>
+            <button data-action="import-db" class="btn-outline">📥 Import</button>
           </div>
         </div>
         
@@ -435,11 +462,22 @@ const UI = {
     
     let siteTitleValue = 'K12 School CMS';
     let themeValue = 'colorlib-kids';
-    
     try {
       siteTitleValue = siteTitle ? JSON.parse(siteTitle.value) : siteTitleValue;
       const themeData = theme ? JSON.parse(theme.value) : { active: themeValue };
       themeValue = themeData.active;
+    } catch (e) {}
+
+    // Logo preview
+    const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
+    let logoPreviewHtml = '';
+    try {
+      if (logoRow) {
+        const logo = JSON.parse(logoRow.value);
+        if (logo?.data) {
+          logoPreviewHtml = `< div class="logo-preview" > <img src="${logo.data}" alt="logo" style="max-width:160px;max-height:80px;object-fit:contain" /></div >`;
+        }
+      }
     } catch (e) {}
 
     return `
@@ -449,6 +487,13 @@ const UI = {
           <div class="form-group">
             <label for="site_title">Site Title</label>
             <input type="text" id="site_title" name="site_title" value="${siteTitleValue}">
+          </div>
+
+          <div class="form-group">
+            <label for="logo_file">Site Logo</label>
+            ${logoPreviewHtml}
+            <input type="file" id="logo_file" name="logo_file" accept="image/*">
+            <small>Upload a site logo (PNG/JPG). This will be embedded into the database.</small>
           </div>
 
           <div class="form-group">
@@ -520,10 +565,19 @@ const UI = {
       const theme = this.getActiveTheme();
       const themeClass = `theme-${theme}`;
 
+    // Site title and logo
+    const siteTitleRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['site_title']);
+    let siteTitle = 'School CMS';
+    try { siteTitle = siteTitleRow ? JSON.parse(siteTitleRow.value) : siteTitle; } catch (e) {}
+    const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
+    let logoHtml = '<div class="logo-box">S</div>';
+    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `< img src = "${logo.data}" alt = "${siteTitle} logo" class="logo-img" />`; } } catch (e) {}
+
     return `
       <nav class="public-nav ${themeClass}">
         <div class="nav-brand">
-          <h1>School CMS</h1>
+          ${logoHtml}
+          <h1 class="nav-site-title">${siteTitle}</h1>
         </div>
         <div class="nav-links">
           ${links}
@@ -539,11 +593,12 @@ const UI = {
   renderPublicFooter() {
     const siteTitle = db.queryOne('SELECT value FROM settings WHERE key = ?', ['site_title']);
     let title = 'School CMS';
-    try {
-      title = siteTitle ? JSON.parse(siteTitle.value) : title;
-    } catch (e) {}
+    try { title = siteTitle ? JSON.parse(siteTitle.value) : title; } catch (e) {}
+    const logoRow = db.queryOne('SELECT value FROM settings WHERE key = ?', ['logo']);
+    let logoHtml = '<div class="logo-box">S</div>';
+    try { if (logoRow) { const logo = JSON.parse(logoRow.value); if (logo?.data) logoHtml = `< img src = "${logo.data}" alt = "${title} logo" class="logo-img" />`; } } catch (e) {}
 
-      const currentYear = new Date().getFullYear();
+    const currentYear = new Date().getFullYear();
 
     return `
       <footer class="public-footer">
@@ -551,7 +606,7 @@ const UI = {
           <div class="footer-grid">
             <div class="footer-section footer-brand">
               <div class="footer-logo">
-                <div class="logo-box">S</div>
+                          ${logoHtml}
               </div>
               <h3>${title}</h3>
               <p>Empowering Nigerian K12 students with quality education and innovative learning experiences.</p>
@@ -590,7 +645,7 @@ const UI = {
           <div class="footer-divider"></div>
 
           <div class="footer-bottom">
-            <p>&copy; ${currentYear} K12 School CMS. All rights reserved.</p>
+                  <p>&copy; ${currentYear} ${title}. All rights reserved.</p>
             <div class="footer-legal">
               <a href="#">Privacy Policy</a>
               <span>•</span>
@@ -1260,15 +1315,26 @@ const UI = {
       const siteTitle = formData.get('site_title');
       const theme = formData.get('theme');
 
-      db.exec(
-        'UPDATE settings SET value = ? WHERE key = ?',
-        [JSON.stringify(siteTitle), 'site_title']
-      );
-      
-      db.exec(
-        'UPDATE settings SET value = ? WHERE key = ?',
-        [JSON.stringify({ active: theme }), 'theme']
-      );
+        // Update or insert site_title
+        let res = db.exec('UPDATE settings SET value = ? WHERE key = ?', [JSON.stringify(siteTitle), 'site_title']);
+        if (!res.changes) db.exec('INSERT INTO settings (key, value) VALUES (?, ?)', ['site_title', JSON.stringify(siteTitle)]);
+
+        // Update or insert theme
+        res = db.exec('UPDATE settings SET value = ? WHERE key = ?', [JSON.stringify({ active: theme }), 'theme']);
+        if (!res.changes) db.exec('INSERT INTO settings (key, value) VALUES (?, ?)', ['theme', JSON.stringify({ active: theme })]);
+
+        // Handle logo upload (stored as data URL in settings 'logo')
+        const logoFile = formData.get('logo_file');
+        if (logoFile && logoFile.size) {
+            const dataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(logoFile);
+            });
+            const logoValue = JSON.stringify({ filename: logoFile.name, data: dataUrl });
+            res = db.exec('UPDATE settings SET value = ? WHERE key = ?', [logoValue, 'logo']);
+            if (!res.changes) db.exec('INSERT INTO settings (key, value) VALUES (?, ?)', ['logo', logoValue]);
+        }
 
       alert('Settings saved!\n\n⚠️ Remember to export database to persist changes.');
       this.render();
