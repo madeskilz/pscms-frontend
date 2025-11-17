@@ -7,9 +7,12 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "migrate": "knex migrate:latest --knexfile ./knexfile.js",
+    "migrate:make": "knex migrate:make",
+    "migrate:subscriptions": "knex migrate:latest --knexfile ./knexfile.js --knexfile ./knexfile.js",
     "migrate:rollback": "knex migrate:rollback --knexfile ./knexfile.js",
     "seed": "knex seed:run --knexfile ./knexfile.js",
     "export:static": "node src/export-static.js",
+    "import:subscriptions": "node src/services/importSubscriptions.js",
     "test:smoke": "bash ../scripts/smoke-test.sh",
     "test:themes": "bash ../scripts/test-themes.sh"
   },
@@ -30,6 +33,6 @@
     "nodemon": "^3.0.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=16.18.1"
   }
 }
